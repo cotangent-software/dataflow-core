@@ -1,6 +1,6 @@
-from graph.base import *
-from graph.db import SQLiteQueryNode, SQLiteDatabaseNode
-from graph.web import WebServerNode, WebEndpointNode
+from dataflow.base import *
+from dataflow.db import SQLiteQueryNode, SQLiteDatabaseNode
+from dataflow.web import WebServerNode, WebEndpointNode
 
 
 def basic_test():
