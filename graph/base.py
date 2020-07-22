@@ -1,6 +1,4 @@
-import threading
 from enum import Enum
-from flask import Flask, request
 Types = Enum('Types', 'STRING INT FLOAT ARRAY MIXED')
 
 
@@ -13,11 +11,6 @@ def array_find(arr, fun):
 
 class GraphError(Exception):
     pass
-
-
-class ExecutionEnvironment:
-    def __init__(self):
-        self.properties = {}
 
 
 class Connection:
@@ -40,6 +33,7 @@ class BaseNode:
         self.declared_inputs = []
         self.declared_outputs = []
         self.output_handlers = {}
+        self.output_cache = {}
         self.state = {}
 
     def declare_input(self, name):
@@ -63,6 +57,15 @@ class BaseNode:
             environment = {}
         print(self)
         return self.output_handlers[name](environment)
+
+    def cache_output(self, name, value):
+        self.output_cache[name] = value
+
+    def clear_cache(self, name=None):
+        if name is None:
+            self.output_cache = {}
+        else:
+            del self.output_cache[name]
 
     def reset_state(self):
         self.state = {}
@@ -304,3 +307,19 @@ class ReadEnvironmentNode(ReadIndexNode):
 
     def get_output__value(self, env):
         return env
+
+
+class EnvironmentContainer:
+    def __init__(self):
+        self.nodes = []
+
+    def add_node(self, node):
+        self.nodes.append(node)
+
+    def get_nodes(self):
+        return self.nodes
+
+    def reset_nodes(self):
+        for node in self.nodes:
+            node.clear_cache()
+            node.reset_state()
