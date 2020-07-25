@@ -206,25 +206,58 @@ class TypeNode(BaseNode):
         return self.resolve_input('in', env).__class__.__name__
 
 
-# class VariableNode(BaseNode):
-#     def __init__(self):
-#         super().__init__()
-#
-#         self.has_initialized = False
-#
-#         self.declare_input('init')
-#         self.declare_input('update')
-#         self.declare_output('value', self.get_output__value)
-#
-#     def get_output__value(self, env):
-#         if not self.has_initialized:
-#             self.has_initialized = True
-#             return self.resolve_input('init')
-#         else:
-#             return self.resolve_input('update')
+class SwitchNode(BaseNode):
+    """
+    Depending on an input value, choose which path to return on the basis of the value's equality with a test
+
+    Inputs
+    ------
+    value: Value which will be tested for equality
+
+    default: Returned path given that no equality test is satisfied
+
+    test_<n>: Value which equality should be tested for
+
+    return_<n>: Associated return path given that test_<n> is satisfied
+
+    Outputs
+    -------
+    selected: Outputted value of the selected return path
+    """
+    def __init__(self, condition_count):
+        super().__init__()
+
+        self.condition_count = condition_count
+
+        self.declare_input('value')
+        self.declare_input('default')
+        for n in range(self.condition_count):
+            self.declare_input('test_%d' % n)
+            self.declare_input('return_%d' % n)
+            self.declare_output('selected', self.get_output__selected)
+
+    def get_output__selected(self, env):
+        value = self.resolve_input('value', env)
+        for n in range(self.condition_count):
+            if self.resolve_input('test_%d' % n, env) == value:
+                return self.resolve_input('return_%d' % n, env)
+        return self.resolve_input('default', env)
 
 
 class VariableNode(BaseNode):
+    """
+    Stores a given value so long as the state is preserved
+
+    Inputs
+    ------
+    value: New value for the variable if update is triggered
+
+    Outputs
+    -------
+    value: Nondestructive current value of the variable
+
+    update: Triggers a variable update and passes the updated variable through this output
+    """
     def __init__(self, init_value=0):
         super().__init__()
 
@@ -552,6 +585,7 @@ BaseNode.NodeRegistry.extend([
     ParseIntNode,
     ParseFloatNode,
     TypeNode,
+    SwitchNode,
     VariableNode,
     IncrementNode,
     EqualsNode,
