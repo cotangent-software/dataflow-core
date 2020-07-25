@@ -64,3 +64,18 @@ class SQLiteQueryNode(DatabaseQueryNode):
         })
 
         return rows
+
+
+# class MongoDatabaseNode(DatabaseNode):
+#     def __init__(self, uri):
+#         super().__init__()
+
+
+# class MongoQueryNode(DatabaseQueryNode):
+#     def __init__(self, query):
+#         super().__init__(query)
+
+BaseNode.NodeRegistry.extend([
+    SQLiteDatabaseNode,
+    SQLiteQueryNode
+])

@@ -28,6 +28,19 @@ class Connection:
 
 
 class BaseNode:
+    """
+    Base class which every node must extend
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    None
+    """
+    NodeRegistry = []
+
     def __init__(self):
         self.connections = []
         self.declared_inputs = []
@@ -71,7 +84,8 @@ class BaseNode:
         self.state = {}
 
     @staticmethod
-    def connect(connection: 'Connection'):
+    def connect(output_node: 'BaseNode', input_node: 'BaseNode', output_name, input_name):
+        connection = Connection(output_node, input_node, output_name, input_name)
         if connection in connection.input.connections:
             raise GraphError('Connection already contained in input node')
         if connection in connection.output.connections:
@@ -85,6 +99,17 @@ class BaseNode:
 
 
 class DataSourceNode(BaseNode):
+    """
+    Acts as an output-only node which sends a predetermined constant output
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    data: Predetermined constant output
+    """
     def __init__(self, data):
         super().__init__()
 
@@ -97,6 +122,17 @@ class DataSourceNode(BaseNode):
 
 
 class PassThroughNode(BaseNode):
+    """
+    Passes data with no variation across a single input and output
+
+    Inputs
+    ------
+    in: Source of the data to be passed
+
+    Outputs
+    -------
+    out: Place to pass the input data
+    """
     def __init__(self):
         super().__init__()
 
@@ -288,6 +324,19 @@ class DummyNode(BaseNode):
 
 
 class ReadIndexNode(BaseNode):
+    """
+    Dynamically accesses the index of input data
+
+    Inputs
+    ------
+    data: The data which the index will be applied to
+
+    index: The index to access from the input data
+
+    Outputs
+    -------
+    value: Result of the indexed operation
+    """
     def __init__(self):
         super().__init__()
 
@@ -300,6 +349,17 @@ class ReadIndexNode(BaseNode):
 
 
 class ReadEnvironmentNode(ReadIndexNode):
+    """
+    Returns the environment state as an object
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    value: The value of the environment state in object form
+    """
     def __init__(self):
         super().__init__()
 
@@ -323,3 +383,22 @@ class EnvironmentContainer:
         for node in self.nodes:
             node.clear_cache()
             node.reset_state()
+
+
+BaseNode.NodeRegistry.extend([
+    DataSourceNode,
+    PassThroughNode,
+    ParseIntNode,
+    ParseFloatNode,
+    TypeNode,
+    VariableNode,
+    IncrementNode,
+    EqualsNode,
+    NotNode,
+    AddNode,
+    MultiplyNode,
+    LoopNode,
+    DummyNode,
+    ReadIndexNode,
+    ReadEnvironmentNode
+])

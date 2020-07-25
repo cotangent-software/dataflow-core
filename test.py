@@ -7,7 +7,7 @@ def basic_test():
     pass_through = PassThroughNode()
     data_node = DataSourceNode(['test'])
 
-    BaseNode.connect(Connection(data_node, pass_through, 'data', 'in'))
+    BaseNode.connect(data_node, pass_through, 'data', 'in')
 
     print('Resolved value:', pass_through.resolve_output('out'))
 
@@ -22,15 +22,15 @@ def type_test():
     type_n_node = TypeNode()
     output_node = PassThroughNode()
 
-    BaseNode.connect(Connection(type_n_node, output_node, 'out', 'in'))
-    BaseNode.connect(Connection(parse_n_node, type_n_node, 'out', 'in'))
-    BaseNode.connect(Connection(index_n_node, parse_n_node, 'value', 'in'))
+    BaseNode.connect(type_n_node, output_node, 'out', 'in')
+    BaseNode.connect(parse_n_node, type_n_node, 'out', 'in')
+    BaseNode.connect(index_n_node, parse_n_node, 'value', 'in')
 
-    BaseNode.connect(Connection(DataSourceNode('args'), index_args_node, 'data', 'index'))
-    BaseNode.connect(Connection(ReadEnvironmentNode(), index_args_node, 'value', 'data'))
+    BaseNode.connect(DataSourceNode('args'), index_args_node, 'data', 'index')
+    BaseNode.connect(ReadEnvironmentNode(), index_args_node, 'value', 'data')
 
-    BaseNode.connect(Connection(DataSourceNode('n'), index_n_node, 'data', 'index'))
-    BaseNode.connect(Connection(index_args_node, index_n_node, 'value', 'data'))
+    BaseNode.connect(DataSourceNode('n'), index_n_node, 'data', 'index')
+    BaseNode.connect(index_args_node, index_n_node, 'value', 'data')
 
     print(output_node.resolve_output('out', {
         'args': {
@@ -44,23 +44,23 @@ def loops_test():
 
     output_node = PassThroughNode()
     loop_node = LoopNode()
-    BaseNode.connect(Connection(loop_node, output_node, 'value', 'in'))
+    BaseNode.connect(loop_node, output_node, 'value', 'in')
     invert_node = NotNode()
-    BaseNode.connect(Connection(invert_node, loop_node, 'out', 'iter'))
+    BaseNode.connect(invert_node, loop_node, 'out', 'iter')
     check_node = EqualsNode()
-    BaseNode.connect(Connection(check_node, invert_node, 'equal', 'in'))
-    BaseNode.connect(Connection(DataSourceNode(15), check_node, 'data', 'arg1'))
+    BaseNode.connect(check_node, invert_node, 'equal', 'in')
+    BaseNode.connect(DataSourceNode(15), check_node, 'data', 'arg1')
     dummy_node = DummyNode()
-    BaseNode.connect(Connection(dummy_node, check_node, 'out', 'arg2'))
+    BaseNode.connect(dummy_node, check_node, 'out', 'arg2')
     increment_node = IncrementNode()
-    BaseNode.connect(Connection(increment_node, dummy_node, 'increment', 'in'))
+    BaseNode.connect(increment_node, dummy_node, 'increment', 'in')
     result_node = VariableNode(1)
-    BaseNode.connect(Connection(result_node, dummy_node, 'update', 'extra'))
-    BaseNode.connect(Connection(result_node, loop_node, 'value', 'value'))
+    BaseNode.connect(result_node, dummy_node, 'update', 'extra')
+    BaseNode.connect(result_node, loop_node, 'value', 'value')
     add_node = MultiplyNode()
-    BaseNode.connect(Connection(add_node, result_node, 'result', 'value'))
-    BaseNode.connect(Connection(increment_node, add_node, 'value', 'arg1'))
-    BaseNode.connect(Connection(result_node, add_node, 'value', 'arg2'))
+    BaseNode.connect(add_node, result_node, 'result', 'value')
+    BaseNode.connect(increment_node, add_node, 'value', 'arg1')
+    BaseNode.connect(result_node, add_node, 'value', 'arg2')
 
     print(output_node.resolve_output('out'))
     print(result_node.state)
@@ -79,22 +79,20 @@ def sqlite_test():
     print('SQLite test:')
     db_node = SQLiteDatabaseNode(':memory:')
     query_node = SQLiteQueryNode(create_test_table)
-    BaseNode.connect(Connection(db_node, query_node, 'conn', 'conn'))
-    BaseNode.connect(Connection(DataSourceNode([]), query_node, 'data', 'variables'))
+    BaseNode.connect(db_node, query_node, 'conn', 'conn')
+    BaseNode.connect(DataSourceNode([]), query_node, 'data', 'variables')
 
     print(query_node.resolve_output('meta'))
 
     query_node = SQLiteQueryNode('INSERT INTO test(name, count, optional) VALUES(?, ?, ?)')
-    BaseNode.connect(Connection(db_node, query_node, 'conn', 'conn'))
-    BaseNode.connect(
-        Connection(
-            DataSourceNode(['Random Name', 4, 'This is some extra random text']), query_node, 'data', 'variables'))
+    BaseNode.connect(db_node, query_node, 'conn', 'conn')
+    BaseNode.connect(DataSourceNode(['Random Name', 4, 'This is some extra random text']), query_node, 'data', 'variables')
 
     print(query_node.resolve_output('meta'))
 
     query_node = SQLiteQueryNode('SELECT * FROM test')
-    BaseNode.connect(Connection(db_node, query_node, 'conn', 'conn'))
-    BaseNode.connect(Connection(DataSourceNode([]), query_node, 'data', 'variables'))
+    BaseNode.connect(db_node, query_node, 'conn', 'conn')
+    BaseNode.connect(DataSourceNode([]), query_node, 'data', 'variables')
 
     print(query_node.resolve_output('data'))
     print(query_node.resolve_output('meta'))
