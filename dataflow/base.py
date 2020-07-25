@@ -44,31 +44,37 @@ class BaseNode:
     def __init__(self):
         self.connections = []
         self.declared_inputs = []
+        self.input_internal = {}
         self.declared_outputs = []
         self.output_handlers = {}
+        self.output_internal = {}
         self.output_cache = {}
         self.state = {}
 
-    def declare_input(self, name):
+    def declare_input(self, name, internal=False):
         self.declared_inputs.append(name)
+        self.input_internal[name] = internal
 
-    def declare_output(self, name, handler):
+    def declare_output(self, name, handler, internal=False):
         self.declared_outputs.append(name)
         self.output_handlers[name] = handler
+        self.output_internal[name] = internal
 
-    def resolve_input(self, name, environment=None):
+    def resolve_input(self, name, environment=None, allow_unconnected=False):
         if environment is None:
             environment = {}
         conn = array_find(self.connections, lambda x: x.input_name == name and x.input == self)
         if conn is not None:
             return conn.output.resolve_output(conn.output_name, environment)
         else:
-            raise GraphError('Unconnected input \'%s\' is depended upon' % name)
+            if allow_unconnected:
+                return None
+            else:
+                raise GraphError('Unconnected input \'%s\' is depended upon' % name)
 
     def resolve_output(self, name, environment=None):
         if environment is None:
             environment = {}
-        print(self)
         return self.output_handlers[name](environment)
 
     def cache_output(self, name, value):
@@ -141,6 +147,30 @@ class PassThroughNode(BaseNode):
 
     def get_output__out(self, env):
         return self.resolve_input('in', env)
+
+
+class PrintNode(BaseNode):
+    """
+    Acts as a PassThroughNode, but prints the value which is passed through
+
+    Inputs
+    ------
+    in: Source of the data to be passed
+
+    Outputs
+    -------
+    out: Place to pass the input data
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.declare_input('in')
+        self.declare_output('out', self.get_output__out)
+
+    def get_output__out(self, env):
+        val = self.resolve_input('in')
+        print(val)
+        return val
 
 
 class ParseIntNode(BaseNode):
@@ -309,6 +339,79 @@ class LoopNode(BaseNode):
         return self.get_output__value(env)
 
 
+class MapNode(BaseNode):
+    """
+    Maps an input array to an output array of equal length with each element transformed based on an internal graph
+
+    Inputs
+    ------
+    array: Input array to be transformed
+
+    value (internal): Result of an elementwise transformation
+
+    Outputs
+    -------
+    mapped: Output array which has been mapped by a transformation
+
+    entry (internal): Element of the input array to be transformed
+
+    index (internal): Index of the element to be transformed
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.declare_input('array')
+        self.declare_input('value', True)
+        self.declare_output('mapped', self.get_output__mapped)
+        self.declare_output('entry', self.get_ioutput__entry, True)
+        self.declare_output('index', self.get_ioutput__index, True)
+
+    def get_output__mapped(self, env):
+        arr = self.resolve_input('array', env)
+        out_arr = []
+        for i in range(len(arr)):
+            self.state['current_index'] = i
+            self.state['current_entry'] = arr[i]
+            out_arr.append(self.resolve_input('value', env))
+        return out_arr
+
+    def get_ioutput__entry(self, env):
+        return self.state['current_entry']
+
+    def get_ioutput__index(self, env):
+        return self.state['current_index']
+
+
+class DictionaryNode(BaseNode):
+    """
+    Compacts a variable number of inputs into a single outputted key-value dictionary
+
+    Inputs
+    ------
+    key_<n>: Key for element number n, starting at 0
+    value_<n>: Value for element number n, starting at 0
+
+    Outputs
+    -------
+    object: Resulting dictionary object
+    """
+    def __init__(self, property_count):
+        super().__init__()
+
+        self.property_count = property_count
+        for i in range(self.property_count):
+            self.declare_input('key_%d' % i)
+            self.declare_input('value_%d' % i)
+
+        self.declare_output('object', self.get_output__object)
+
+    def get_output__object(self, env):
+        out = {}
+        for i in range(self.property_count):
+            out[self.resolve_input('key_%d' % i, env)] = self.resolve_input('value_%d' % i, env)
+        return out
+
+
 class DummyNode(BaseNode):
     def __init__(self):
         super().__init__()
@@ -323,7 +426,7 @@ class DummyNode(BaseNode):
         return val
 
 
-class ReadIndexNode(BaseNode):
+class IndexNode(BaseNode):
     """
     Dynamically accesses the index of input data
 
@@ -337,18 +440,75 @@ class ReadIndexNode(BaseNode):
     -------
     value: Result of the indexed operation
     """
-    def __init__(self):
+    def __init__(self, multiple=False):
         super().__init__()
+
+        self.multiple = multiple
 
         self.declare_input('data')
         self.declare_input('index')
         self.declare_output('value', self.get_output__value)
 
     def get_output__value(self, env):
-        return self.resolve_input('data', env)[self.resolve_input('index', env)]
+        data = self.resolve_input('data', env)
+        idx = self.resolve_input('index', env)
+        if self.multiple:
+            idx_split = idx.split('.')
+            current_val = data
+            for current_idx in idx_split:
+                if self.is_int_indexed(current_val):
+                    current_val = current_val[current_idx]
+                else:
+                    current_val = getattr(current_val, current_idx)
+            return current_val
+        else:
+            if self.is_int_indexed(data):
+                return data[idx]
+            else:
+                return getattr(data, idx)
+
+    @staticmethod
+    def is_int_indexed(obj):
+        return isinstance(obj, list) or isinstance(obj, tuple)
 
 
-class ReadEnvironmentNode(ReadIndexNode):
+class SliceNode(BaseNode):
+    """
+    Slices an array according to python slice rules
+
+    Inputs
+    ------
+    array: Array which should be sliced
+
+    slice_start: Starting index of array slice
+
+    slice_end: Ending index of array slice
+
+    slice_step: Step size for slice operation
+
+    Outputs
+    -------
+    array: Sliced version of input array
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.declare_input('array')
+        self.declare_input('slice_start')
+        self.declare_input('slice_end')
+        self.declare_input('slice_step')
+        self.declare_output('array', self.get_output__array)
+
+    def get_output__array(self, env):
+        slice_obj = slice(
+            self.resolve_input('slice_start', env, allow_unconnected=True),
+            self.resolve_input('slice_end', env, allow_unconnected=True),
+            self.resolve_input('slice_step', env, allow_unconnected=True)
+        )
+        return self.resolve_input('array', env)[slice_obj]
+
+
+class ReadEnvironmentNode(IndexNode):
     """
     Returns the environment state as an object
 
@@ -388,6 +548,7 @@ class EnvironmentContainer:
 BaseNode.NodeRegistry.extend([
     DataSourceNode,
     PassThroughNode,
+    PrintNode,
     ParseIntNode,
     ParseFloatNode,
     TypeNode,
@@ -398,7 +559,10 @@ BaseNode.NodeRegistry.extend([
     AddNode,
     MultiplyNode,
     LoopNode,
+    MapNode,
+    DictionaryNode,
     DummyNode,
-    ReadIndexNode,
+    IndexNode,
+    SliceNode,
     ReadEnvironmentNode
 ])

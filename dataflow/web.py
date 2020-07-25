@@ -1,6 +1,6 @@
 import json
 import threading
-from flask import Flask, request
+from flask import Flask, request, Response
 
 from dataflow.base import DataSourceNode, BaseNode
 
@@ -44,8 +44,10 @@ class WebEndpointNode(BaseNode):
     -------
     content: Value passed through from data input and is sent upon request
     """
-    def __init__(self, path, server_node: 'WebServerNode', methods='GET'):
+    def __init__(self, path, server_node: 'WebServerNode', methods='GET', content_type='text/html'):
         super().__init__()
+
+        self.content_type = content_type
 
         self.declare_input('data')
         self.declare_output('content', self.get_output__content)
@@ -60,10 +62,10 @@ class WebEndpointNode(BaseNode):
         return self.resolve_input('data', env)
 
     def endpoint_handler(self):
-        return self.resolve_output('content', {
+        return Response(self.resolve_output('content', {
             'args': request.args,
             'method': request.method
-        })
+        }), mimetype=self.content_type)
 
 
 class JSONStringifyNode(BaseNode):
@@ -78,14 +80,16 @@ class JSONStringifyNode(BaseNode):
     -------
     serialized: A string containing the json encoded object
     """
-    def __init__(self):
+    def __init__(self, indent=None):
         super().__init__()
+
+        self.indent = indent
 
         self.declare_input('object')
         self.declare_output('serialized', self.get_output__serialized)
 
     def get_output__serialized(self, env):
-        return json.dumps(self.resolve_input('object', env))
+        return json.dumps(self.resolve_input('object', env), indent=self.indent)
 
 
 class JSONParseNode(BaseNode):
@@ -108,7 +112,7 @@ class JSONParseNode(BaseNode):
         self.declare_output('serialized', self.get_output__serialized)
 
     def get_output__serialized(self, env):
-        return json.dumps(self.resolve_input('object', env))
+        return json.loads(self.resolve_input('object', env))
 
 
 BaseNode.NodeRegistry.extend([
