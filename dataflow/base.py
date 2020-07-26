@@ -1,3 +1,5 @@
+import uuid
+from collections.abc import Iterable
 from enum import Enum
 Types = Enum('Types', 'STRING INT FLOAT ARRAY MIXED')
 
@@ -15,6 +17,7 @@ class GraphError(Exception):
 
 class Connection:
     def __init__(self, output_node: 'BaseNode', input_node: 'BaseNode', output_name, input_name):
+        self.id = uuid.uuid4().hex
         self.output = output_node
         self.input = input_node
         self.output_name = output_name
@@ -25,6 +28,15 @@ class Connection:
                self.input == other.input and\
                self.output_name == other.output_name and\
                self.input_name == other.input_name
+
+    def to_object(self):
+        return {
+            'id': self.id,
+            'output_node': self.output.id,
+            'input_node': self.input.id,
+            'output_name': self.output_name,
+            'input_name': self.input_name
+        }
 
 
 class BaseNode:
@@ -42,6 +54,7 @@ class BaseNode:
     NodeRegistry = []
 
     def __init__(self):
+        self.id = uuid.uuid4().hex
         self.connections = []
         self.declared_inputs = []
         self.input_internal = {}
@@ -73,6 +86,7 @@ class BaseNode:
                 raise GraphError('Unconnected input \'%s\' is depended upon' % name)
 
     def resolve_output(self, name, environment=None):
+        print(self)
         if environment is None:
             environment = {}
         return self.output_handlers[name](environment)
@@ -89,6 +103,32 @@ class BaseNode:
     def reset_state(self):
         self.state = {}
 
+    def to_object(self, state=True, io=True):
+        inputs = []
+        outputs = []
+        if io:
+            for declared_input in self.declared_inputs:
+                inputs.append({
+                    'name': declared_input,
+                    'internal': self.input_internal[declared_input]
+                })
+            for declared_output in self.declared_outputs:
+                outputs.append({
+                    'name': declared_output,
+                    'internal': self.output_internal[declared_output]
+                })
+        out = {
+            'id': self.id,
+            'type': BaseNode.NodeRegistry.index(self.__class__)
+        }
+        if io:
+            out['inputs'] = inputs
+            out['outputs'] = outputs
+        if state:
+            out['state'] = self.state
+            out['output_cache'] = self.output_cache
+        return out
+
     @staticmethod
     def connect(output_node: 'BaseNode', input_node: 'BaseNode', output_name, input_name):
         connection = Connection(output_node, input_node, output_name, input_name)
@@ -102,6 +142,8 @@ class BaseNode:
             raise GraphError('Output connection contains no \'%s\' output' % connection.output_name)
         connection.input.connections.append(connection)
         connection.output.connections.append(connection)
+
+        return connection
 
 
 class DataSourceNode(BaseNode):
@@ -234,14 +276,15 @@ class SwitchNode(BaseNode):
         for n in range(self.condition_count):
             self.declare_input('test_%d' % n)
             self.declare_input('return_%d' % n)
-            self.declare_output('selected', self.get_output__selected)
+        self.declare_output('selected', self.get_output__selected)
 
     def get_output__selected(self, env):
         value = self.resolve_input('value', env)
         for n in range(self.condition_count):
             if self.resolve_input('test_%d' % n, env) == value:
                 return self.resolve_input('return_%d' % n, env)
-        return self.resolve_input('default', env)
+        default_value = self.resolve_input('default', env, allow_unconnected=True)
+        return default_value
 
 
 class VariableNode(BaseNode):
@@ -269,10 +312,13 @@ class VariableNode(BaseNode):
         self.declare_output('value', self.get_output__value)
 
     def get_output__update(self, env):
-        self.state['value'] = self.resolve_input('value', env)
-        return self.state['value']
+        next_value = self.resolve_input('value', env)
+        if next_value is not None:
+            self.state['value'] = next_value
+        return self.get_output__value(env)
 
     def get_output__value(self, env):
+        print(self.state['value'])
         return self.state['value']
 
     def reset_state(self):
@@ -415,6 +461,38 @@ class MapNode(BaseNode):
         return self.state['current_index']
 
 
+class ArrayMergeNode(BaseNode):
+    """
+    Merges arrays or scalar values into an output array
+
+    Inputs
+    ------
+    in_<n>: Arrays or scalars to be merged into the output array
+
+    Outputs
+    -------
+    merged: The result of the array merging operation
+    """
+    def __init__(self, array_count):
+        super().__init__()
+
+        self.array_count = array_count
+
+        for n in range(self.array_count):
+            self.declare_input('in_%d' % n)
+        self.declare_output('merged', self.get_output__merged)
+
+    def get_output__merged(self, env):
+        out = []
+        for n in range(self.array_count):
+            val = self.resolve_input('in_%d' % n, env)
+            if isinstance(val, Iterable):
+                out.extend(val)
+            else:
+                out.append(val)
+        return out
+
+
 class DictionaryNode(BaseNode):
     """
     Compacts a variable number of inputs into a single outputted key-value dictionary
@@ -422,6 +500,7 @@ class DictionaryNode(BaseNode):
     Inputs
     ------
     key_<n>: Key for element number n, starting at 0
+
     value_<n>: Value for element number n, starting at 0
 
     Outputs
@@ -446,6 +525,18 @@ class DictionaryNode(BaseNode):
 
 
 class DummyNode(BaseNode):
+    """
+    Passes through an input while requiring another input and throwing its value out
+
+    Inputs
+    ------
+    in: Input value to be passed on to output
+    extra: Input value which will be resolved but then thrown out
+
+    Outputs
+    -------
+    out: Resolved value of the in input
+    """
     def __init__(self):
         super().__init__()
 
@@ -502,7 +593,38 @@ class IndexNode(BaseNode):
 
     @staticmethod
     def is_int_indexed(obj):
-        return isinstance(obj, list) or isinstance(obj, tuple)
+        # return isinstance(obj, list) or isinstance(obj, tuple) or isinstance(obj, dict)
+        return hasattr(obj, '__getitem__')
+
+
+class IndexOfNode(BaseNode):
+    """
+    Searches for a value based on equality in a given array
+
+    Inputs
+    ------
+    array: The array to search through
+
+    search: Value to search for in target array
+
+    Outputs
+    -------
+    index: The index of the search element in target array. If not found, it is equal to -1
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.declare_input('array')
+        self.declare_input('search')
+        self.declare_output('index', self.get_output__index)
+
+    def get_output__index(self, env):
+        arr = self.resolve_input('array', env)
+        search = self.resolve_input('search', env)
+        for i in range(len(arr)):
+            if arr[i] == search:
+                return i
+        return -1
 
 
 class SliceNode(BaseNode):
@@ -594,6 +716,7 @@ BaseNode.NodeRegistry.extend([
     MultiplyNode,
     LoopNode,
     MapNode,
+    ArrayMergeNode,
     DictionaryNode,
     DummyNode,
     IndexNode,

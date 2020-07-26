@@ -47,6 +47,7 @@ class WebEndpointNode(BaseNode):
     def __init__(self, path, server_node: 'WebServerNode', methods='GET', content_type='text/html'):
         super().__init__()
 
+        self.path = path
         self.content_type = content_type
 
         self.declare_input('data')
@@ -56,7 +57,11 @@ class WebEndpointNode(BaseNode):
             methods = [methods]
 
         app = server_node.resolve_output('data')['app']
-        app.route(path, methods=methods)(self.endpoint_handler)
+
+        def func():
+            return self.endpoint_handler()
+        func.__name__ = self.id
+        app.route(path, methods=methods)(func)
 
     def get_output__content(self, env):
         return self.resolve_input('data', env)
@@ -64,7 +69,9 @@ class WebEndpointNode(BaseNode):
     def endpoint_handler(self):
         return Response(self.resolve_output('content', {
             'args': request.args,
-            'method': request.method
+            'form': request.form,
+            'method': request.method,
+            'path': self.path
         }), mimetype=self.content_type)
 
 
