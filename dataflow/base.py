@@ -103,6 +103,9 @@ class BaseNode:
     def reset_state(self):
         self.state = {}
 
+    def remove_connection(self, conn):
+        self.connections.remove(conn)
+
     def to_object(self, state=True, io=True):
         inputs = []
         outputs = []
@@ -144,6 +147,11 @@ class BaseNode:
         connection.output.connections.append(connection)
 
         return connection
+
+    @staticmethod
+    def disconnect(connection):
+        connection.output.remove_connection(connection)
+        connection.input.remove_connection(connection)
 
 
 class DataSourceNode(BaseNode):
@@ -404,7 +412,7 @@ class LoopNode(BaseNode):
         self.declare_output('value', self.get_output__value)
         self.declare_output('__continue__', self.get_output____continue__)
 
-        BaseNode.connect(Connection(self, self, '__continue__', '__continue__'))
+        BaseNode.connect(self, self, '__continue__', '__continue__')
 
         self.state['init'] = False
 

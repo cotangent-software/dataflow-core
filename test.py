@@ -98,4 +98,4 @@ def sqlite_test():
     print(query_node.resolve_output('meta'))
 
 
-sqlite_test()
+basic_test()
