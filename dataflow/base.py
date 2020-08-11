@@ -1,6 +1,9 @@
 import uuid
 from collections.abc import Iterable
 from enum import Enum
+
+from dataflow.gen import *
+
 Types = Enum('Types', 'STRING INT FLOAT ARRAY MIXED')
 
 
@@ -62,16 +65,26 @@ class BaseNode:
         self.output_handlers = {}
         self.output_internal = {}
         self.output_cache = {}
+        self.deploy_handlers = {}
         self.state = {}
 
     def declare_input(self, name, internal=False):
         self.declared_inputs.append(name)
         self.input_internal[name] = internal
 
-    def declare_output(self, name, handler, internal=False):
+    def declare_output(self, name, handler, deploy_handler=None, internal=False):
         self.declared_outputs.append(name)
         self.output_handlers[name] = handler
         self.output_internal[name] = internal
+        if deploy_handler is not None:
+            self.deploy_handlers[name] = deploy_handler
+
+    def get_input_connection(self, input_name) -> Connection:
+        conn = array_find(self.connections, lambda x: x.input_name == input_name and x.input == self)
+        if conn is not None:
+            return conn
+        else:
+            raise GraphError('Could not find input connection with name \'%s\'' % input_name)
 
     def resolve_input(self, name, environment=None, allow_unconnected=False):
         if environment is None:
@@ -90,6 +103,9 @@ class BaseNode:
         if environment is None:
             environment = {}
         return self.output_handlers[name](environment)
+
+    def resolve_deploy(self, name):
+        return self.deploy_handlers[name]()
 
     def cache_output(self, name, value):
         self.output_cache[name] = value
@@ -171,10 +187,13 @@ class DataSourceNode(BaseNode):
 
         self.data = data
 
-        self.declare_output('data', self.get_output__data)
+        self.declare_output('data', self.get_output__data, self.deploy_output__data)
 
     def get_output__data(self, env):
         return self.data
+
+    def deploy_output__data(self):
+        return VariableStatement(NodeOutputVariableName(self.id, 'data'), LanguageValue(self.data))
 
 
 class PassThroughNode(BaseNode):
@@ -193,10 +212,17 @@ class PassThroughNode(BaseNode):
         super().__init__()
 
         self.declare_input('in')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
         return self.resolve_input('in', env)
+
+    def deploy_output__out(self):
+        conn = self.get_input_connection('in')
+        return LanguageConcat(
+            conn.output.resolve_deploy(conn.output_name),
+            VariableStatement(NodeOutputVariableName(self.id, 'out'), NodeOutputVariableName(conn.output.id, conn.output_name))
+        )
 
 
 class PrintNode(BaseNode):

@@ -98,4 +98,19 @@ def sqlite_test():
     print(query_node.resolve_output('meta'))
 
 
-basic_test()
+def deploy_test():
+    pass_node = PassThroughNode()
+    data_node = DataSourceNode('Hello, world!')
+    BaseNode.connect(data_node, pass_node, 'data', 'in')
+
+    from dataflow.gen import deploy
+    code = LanguageConcat(
+        deploy(pass_node, 'out'),
+        FunctionCall(VariableName('console.log'), FunctionCall(VariableName('main')))
+    )
+    print(code.__es6__())
+    with open('deploy.js', 'w') as fh:
+        fh.write(code.__es6__())
+
+
+deploy_test()
