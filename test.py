@@ -100,8 +100,12 @@ def sqlite_test():
 
 def deploy_test():
     pass_node = PassThroughNode()
-    data_node = DataSourceNode('Hello, world!')
-    BaseNode.connect(data_node, pass_node, 'data', 'in')
+    data1_node = DataSourceNode(4)
+    data2_node = DataSourceNode(14)
+    add_node = MultiplyNode()
+    BaseNode.connect(data1_node, add_node, 'data', 'arg1')
+    BaseNode.connect(data2_node, add_node, 'data', 'arg2')
+    BaseNode.connect(add_node, pass_node, 'result', 'in')
 
     from dataflow.gen import deploy
     code = LanguageConcat(

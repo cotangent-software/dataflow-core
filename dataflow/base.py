@@ -27,9 +27,9 @@ class Connection:
         self.input_name = input_name
 
     def __eq__(self, other):
-        return self.output == other.output and\
-               self.input == other.input and\
-               self.output_name == other.output_name and\
+        return self.output == other.output and \
+               self.input == other.input and \
+               self.output_name == other.output_name and \
                self.input_name == other.input_name
 
     def to_object(self):
@@ -182,6 +182,7 @@ class DataSourceNode(BaseNode):
     -------
     data: Predetermined constant output
     """
+
     def __init__(self, data):
         super().__init__()
 
@@ -208,6 +209,7 @@ class PassThroughNode(BaseNode):
     -------
     out: Place to pass the input data
     """
+
     def __init__(self):
         super().__init__()
 
@@ -221,7 +223,8 @@ class PassThroughNode(BaseNode):
         conn = self.get_input_connection('in')
         return LanguageConcat(
             conn.output.resolve_deploy(conn.output_name),
-            VariableStatement(NodeOutputVariableName(self.id, 'out'), NodeOutputVariableName(conn.output.id, conn.output_name))
+            VariableStatement(NodeOutputVariableName(self.id, 'out'),
+                              NodeOutputVariableName(conn.output.id, conn.output_name))
         )
 
 
@@ -237,6 +240,7 @@ class PrintNode(BaseNode):
     -------
     out: Place to pass the input data
     """
+
     def __init__(self):
         super().__init__()
 
@@ -300,6 +304,7 @@ class SwitchNode(BaseNode):
     -------
     selected: Outputted value of the selected return path
     """
+
     def __init__(self, condition_count):
         super().__init__()
 
@@ -335,6 +340,7 @@ class VariableNode(BaseNode):
 
     update: Triggers a variable update and passes the updated variable through this output
     """
+
     def __init__(self, init_value=0):
         super().__init__()
 
@@ -406,12 +412,27 @@ class AddNode(BaseNode):
 
         self.declare_input('arg1')
         self.declare_input('arg2')
-        self.declare_output('result', self.get_output__result)
+        self.declare_output('result', self.get_output__result, self.deploy_output__result)
 
     def get_output__result(self, env):
         op1 = self.resolve_input('arg1', env)
         op2 = self.resolve_input('arg2', env)
         return op1 + op2
+
+    def deploy_output__result(self):
+        conn1 = self.get_input_connection('arg1')
+        conn2 = self.get_input_connection('arg2')
+        return LanguageConcat(
+            conn1.output.resolve_deploy(conn1.output_name),
+            conn2.output.resolve_deploy(conn2.output_name),
+            VariableStatement(
+                NodeOutputVariableName(self.id, 'result'),
+                LanguageOperation('+',
+                                  NodeOutputVariableName(conn1.output.id, conn1.output_name),
+                                  NodeOutputVariableName(conn2.output.id, conn2.output_name)
+                                  )
+            )
+        )
 
 
 class MultiplyNode(BaseNode):
@@ -420,12 +441,27 @@ class MultiplyNode(BaseNode):
 
         self.declare_input('arg1')
         self.declare_input('arg2')
-        self.declare_output('result', self.get_output__result)
+        self.declare_output('result', self.get_output__result, self.deploy_output__result)
 
     def get_output__result(self, env):
         op1 = self.resolve_input('arg1', env)
         op2 = self.resolve_input('arg2', env)
         return op1 * op2
+
+    def deploy_output__result(self):
+        conn1 = self.get_input_connection('arg1')
+        conn2 = self.get_input_connection('arg2')
+        return LanguageConcat(
+            conn1.output.resolve_deploy(conn1.output_name),
+            conn2.output.resolve_deploy(conn2.output_name),
+            VariableStatement(
+                NodeOutputVariableName(self.id, 'result'),
+                LanguageOperation('*',
+                                  NodeOutputVariableName(conn1.output.id, conn1.output_name),
+                                  NodeOutputVariableName(conn2.output.id, conn2.output_name)
+                                  )
+            )
+        )
 
 
 class LoopNode(BaseNode):
@@ -470,6 +506,7 @@ class MapNode(BaseNode):
 
     index (internal): Index of the element to be transformed
     """
+
     def __init__(self):
         super().__init__()
 
@@ -507,6 +544,7 @@ class ArrayMergeNode(BaseNode):
     -------
     merged: The result of the array merging operation
     """
+
     def __init__(self, array_count):
         super().__init__()
 
@@ -541,6 +579,7 @@ class DictionaryNode(BaseNode):
     -------
     object: Resulting dictionary object
     """
+
     def __init__(self, property_count):
         super().__init__()
 
@@ -571,6 +610,7 @@ class DummyNode(BaseNode):
     -------
     out: Resolved value of the in input
     """
+
     def __init__(self):
         super().__init__()
 
@@ -598,6 +638,7 @@ class IndexNode(BaseNode):
     -------
     value: Result of the indexed operation
     """
+
     def __init__(self, multiple=False):
         super().__init__()
 
@@ -645,6 +686,7 @@ class IndexOfNode(BaseNode):
     -------
     index: The index of the search element in target array. If not found, it is equal to -1
     """
+
     def __init__(self):
         super().__init__()
 
@@ -679,6 +721,7 @@ class SliceNode(BaseNode):
     -------
     array: Sliced version of input array
     """
+
     def __init__(self):
         super().__init__()
 
@@ -709,6 +752,7 @@ class ReadEnvironmentNode(IndexNode):
     -------
     value: The value of the environment state in object form
     """
+
     def __init__(self):
         super().__init__()
 

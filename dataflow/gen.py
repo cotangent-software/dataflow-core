@@ -10,8 +10,21 @@ class LanguageValue:
         if t == str:
             return f'Buffer.from(\'{base64.b64encode(self.value.encode("utf-8")).decode("utf-8")}\', \'base64' \
                    f'\').toString()'
+        if issubclass(t, LanguageValue):
+            return self.value.__es6__()
         else:
             return self.value
+
+
+class LanguageOperation(LanguageValue):
+    def __init__(self, op, left: LanguageValue, right: LanguageValue):
+        super().__init__(None)
+        self.op = op
+        self.left = left
+        self.right = right
+
+    def __es6__(self):
+        return f'({self.left.__es6__()} {self.op} {self.right.__es6__()})'
 
 
 class VariableName(LanguageValue):
