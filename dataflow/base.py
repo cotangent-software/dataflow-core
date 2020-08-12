@@ -86,6 +86,14 @@ class BaseNode:
         else:
             raise GraphError('Could not find input connection with name \'%s\'' % input_name)
 
+    def get_input_connection_variable_name(self, input_name) -> NodeOutputVariableName:
+        conn = self.get_input_connection(input_name)
+        return NodeOutputVariableName(conn.output.id, conn.output_name)
+
+    def get_input_connection_function_name(self, input_name) -> NodeOutputFunctionName:
+        conn = self.get_input_connection(input_name)
+        return NodeOutputFunctionName(conn.output.id, conn.output_name)
+
     def resolve_input(self, name, environment=None, allow_unconnected=False):
         if environment is None:
             environment = {}
@@ -106,6 +114,23 @@ class BaseNode:
 
     def resolve_deploy(self, name):
         return self.deploy_handlers[name]()
+
+    def resolve_deploy_function(self, name):
+        return FunctionDeclaration(
+            NodeOutputFunctionName(self.id, name),
+            LanguageConcat(
+                self.resolve_deploy(name),
+                ReturnStatement(NodeOutputVariableName(self.id, name))
+            )
+        )
+
+    def resolve_input_deploy(self, input_name):
+        conn = self.get_input_connection(input_name)
+        return conn.output.resolve_deploy(conn.output_name)
+
+    def resolve_input_deploy_function(self, input_name):
+        conn = self.get_input_connection(input_name)
+        return conn.output.resolve_deploy_function(conn.output_name)
 
     def cache_output(self, name, value):
         self.output_cache[name] = value
@@ -194,7 +219,7 @@ class DataSourceNode(BaseNode):
         return self.data
 
     def deploy_output__data(self):
-        return VariableStatement(NodeOutputVariableName(self.id, 'data'), LanguageValue(self.data))
+        return VariableDeclareStatement(NodeOutputVariableName(self.id, 'data'), LanguageValue(self.data))
 
 
 class PassThroughNode(BaseNode):
@@ -220,11 +245,10 @@ class PassThroughNode(BaseNode):
         return self.resolve_input('in', env)
 
     def deploy_output__out(self):
-        conn = self.get_input_connection('in')
         return LanguageConcat(
-            conn.output.resolve_deploy(conn.output_name),
-            VariableStatement(NodeOutputVariableName(self.id, 'out'),
-                              NodeOutputVariableName(conn.output.id, conn.output_name))
+            self.resolve_input_deploy('in'),
+            VariableDeclareStatement(NodeOutputVariableName(self.id, 'out'),
+                                     self.get_input_connection_variable_name('in'))
         )
 
 
@@ -245,12 +269,20 @@ class PrintNode(BaseNode):
         super().__init__()
 
         self.declare_input('in')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
         val = self.resolve_input('in')
         print(val)
         return val
+
+    def deploy_output__out(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('in'),
+            VariableDeclareStatement(NodeOutputVariableName(self.id, 'out'),
+                                     self.get_input_connection_variable_name('in')),
+            PrintStatement(NodeOutputVariableName(self.id, 'out'))
+        )
 
 
 class ParseIntNode(BaseNode):
@@ -270,10 +302,18 @@ class ParseIntNode(BaseNode):
         super().__init__()
 
         self.declare_input('in')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
         return int(self.resolve_input('in', env))
+
+    def deploy_output__out(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('in'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'out'), ParseIntCall(self.get_input_connection_variable_name('in'))
+            )
+        )
 
 
 class ParseFloatNode(BaseNode):
@@ -293,10 +333,18 @@ class ParseFloatNode(BaseNode):
         super().__init__()
 
         self.declare_input('in')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
         return float(self.resolve_input('in', env))
+
+    def deploy_output__out(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('in'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'out'), ParseFloatCall(self.get_input_connection_variable_name('in'))
+            )
+        )
 
 
 class TypeNode(BaseNode):
@@ -316,10 +364,30 @@ class TypeNode(BaseNode):
         super().__init__()
 
         self.declare_input('in')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
-        return self.resolve_input('in', env).__class__.__name__
+        t = self.resolve_input('in', env).__class__.__name__
+        if t == dict:
+            return 'dict'
+        if t == list:
+            return 'array'
+        if t == int:
+            return 'int'
+        if t == float:
+            return 'float'
+        if t == str:
+            return 'string'
+        return t
+
+    def deploy_output__out(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('in'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'out'),
+                FunctionCall(VariableName('utils_type'), self.get_input_connection_variable_name('in'))
+            )
+        )
 
 
 class SwitchNode(BaseNode):
@@ -351,7 +419,7 @@ class SwitchNode(BaseNode):
         for n in range(self.condition_count):
             self.declare_input('test_%d' % n)
             self.declare_input('return_%d' % n)
-        self.declare_output('selected', self.get_output__selected)
+        self.declare_output('selected', self.get_output__selected, self.deploy_output__selected)
 
     def get_output__selected(self, env):
         value = self.resolve_input('value', env)
@@ -360,6 +428,50 @@ class SwitchNode(BaseNode):
                 return self.resolve_input('return_%d' % n, env)
         default_value = self.resolve_input('default', env, allow_unconnected=True)
         return default_value
+
+    def deploy_output__selected(self):
+        test_functions = []
+        return_functions = []
+        if_statements = []
+        for n in range(self.condition_count):
+            test_functions.append(self.resolve_input_deploy_function('test_%d' % n))
+            return_functions.append(self.resolve_input_deploy_function('return_%d' % n))
+            if_statements.append(
+                IfStatement(
+                    LanguageOperation(
+                        CompareEqualsSymbol(),
+                        FunctionCall(self.get_input_connection_function_name('test_%d' % n)),
+                        self.get_input_connection_variable_name('value')
+                    ),
+                    VariableUpdateStatement(
+                        NodeOutputVariableName(self.id, 'selected'),
+                        FunctionCall(self.get_input_connection_function_name('return_%d' % n))
+                    ),
+                    if_type=('if' if n == 0 else 'elseif')
+                )
+            )
+        return_functions.append(self.resolve_input_deploy_function('default'))
+        if_statements.append(
+            IfStatement(
+                None,
+                VariableUpdateStatement(
+                    NodeOutputVariableName(self.id, 'selected'),
+                    FunctionCall(self.get_input_connection_function_name('default'))
+                ),
+                if_type='else'
+            )
+        )
+
+        return LanguageConcat(
+            self.resolve_input_deploy('value'),
+            *test_functions,
+            *return_functions,
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'selected'),
+                LanguageNone()
+            ),
+            *if_statements
+        )
 
 
 class VariableNode(BaseNode):
@@ -447,15 +559,30 @@ class EqualsNode(BaseNode):
     -------
     equal: A boolean being true if arg1 and arg2 are equal and otherwise being false
     """
+
     def __init__(self):
         super().__init__()
 
         self.declare_input('arg1')
         self.declare_input('arg2')
-        self.declare_output('equal', self.get_output__equal)
+        self.declare_output('equal', self.get_output__equal, self.deploy_output__equal)
 
     def get_output__equal(self, env):
         return self.resolve_input('arg1', env) == self.resolve_input('arg2', env)
+
+    def deploy_output__equal(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('arg1'),
+            self.resolve_input_deploy('arg2'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'equal'),
+                LanguageOperation(
+                    CompareEqualsSymbol(),
+                    self.get_input_connection_variable_name('arg1'),
+                    self.get_input_connection_variable_name('arg2')
+                )
+            )
+        )
 
 
 class NotNode(BaseNode):
@@ -470,14 +597,28 @@ class NotNode(BaseNode):
     -------
     out: Boolean value representing the boolean not operation performed on input in
     """
+
     def __init__(self):
         super().__init__()
 
         self.declare_input('in')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
         return not self.resolve_input('in', env)
+
+    def deploy_output__out(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('in'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'out'),
+                LanguageOperation(
+                    BooleanNotSymbol(),
+                    None,
+                    self.get_input_connection_variable_name('in')
+                )
+            )
+        )
 
 
 class AddNode(BaseNode):
@@ -494,6 +635,7 @@ class AddNode(BaseNode):
     -------
     result: Sum of inputs arg1 and arg2
     """
+
     def __init__(self):
         super().__init__()
 
@@ -512,9 +654,9 @@ class AddNode(BaseNode):
         return LanguageConcat(
             conn1.output.resolve_deploy(conn1.output_name),
             conn2.output.resolve_deploy(conn2.output_name),
-            VariableStatement(
+            VariableDeclareStatement(
                 NodeOutputVariableName(self.id, 'result'),
-                LanguageOperation('+',
+                LanguageOperation(AddSymbol(),
                                   NodeOutputVariableName(conn1.output.id, conn1.output_name),
                                   NodeOutputVariableName(conn2.output.id, conn2.output_name)
                                   )
@@ -536,6 +678,7 @@ class MultiplyNode(BaseNode):
     -------
     out: Product of inputs arg1 and arg2
     """
+
     def __init__(self):
         super().__init__()
 
@@ -554,9 +697,9 @@ class MultiplyNode(BaseNode):
         return LanguageConcat(
             conn1.output.resolve_deploy(conn1.output_name),
             conn2.output.resolve_deploy(conn2.output_name),
-            VariableStatement(
+            VariableDeclareStatement(
                 NodeOutputVariableName(self.id, 'result'),
-                LanguageOperation('*',
+                LanguageOperation(MultiplySymbol(),
                                   NodeOutputVariableName(conn1.output.id, conn1.output_name),
                                   NodeOutputVariableName(conn2.output.id, conn2.output_name)
                                   )
@@ -578,6 +721,7 @@ class LoopNode(BaseNode):
     -------
     value: Outputted value of the loop, passed through from the value input
     """
+
     def __init__(self):
         super().__init__()
 

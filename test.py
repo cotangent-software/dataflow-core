@@ -99,20 +99,21 @@ def sqlite_test():
 
 
 def deploy_test():
-    pass_node = PassThroughNode()
-    data1_node = DataSourceNode(4)
-    data2_node = DataSourceNode(14)
-    add_node = MultiplyNode()
-    BaseNode.connect(data1_node, add_node, 'data', 'arg1')
-    BaseNode.connect(data2_node, add_node, 'data', 'arg2')
-    BaseNode.connect(add_node, pass_node, 'result', 'in')
+    switch_node = SwitchNode(2)
+    BaseNode.connect(DataSourceNode(4), switch_node, 'data', 'value')
+    BaseNode.connect(DataSourceNode(14), switch_node, 'data', 'default')
+    BaseNode.connect(DataSourceNode(0), switch_node, 'data', 'test_0')
+    BaseNode.connect(DataSourceNode(0), switch_node, 'data', 'return_0')
+    BaseNode.connect(DataSourceNode(4), switch_node, 'data', 'test_1')
+    BaseNode.connect(DataSourceNode('Hello world'), switch_node, 'data', 'return_1')
 
     from dataflow.gen import deploy
     code = LanguageConcat(
-        deploy(pass_node, 'out'),
-        FunctionCall(VariableName('console.log'), FunctionCall(VariableName('main')))
+        deploy(switch_node, 'selected'),
+        FunctionCall(VariableName('main'))
     )
     print(code.__es6__())
+    print(switch_node.resolve_output('selected'))
     with open('deploy.js', 'w') as fh:
         fh.write(code.__es6__())
 
