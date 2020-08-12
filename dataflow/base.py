@@ -254,6 +254,18 @@ class PrintNode(BaseNode):
 
 
 class ParseIntNode(BaseNode):
+    """
+    Parses an input type to an integer
+
+    Inputs
+    ------
+    in: Source of the data to be parsed
+
+    Outputs
+    -------
+    out: Parsed integer output
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -265,6 +277,18 @@ class ParseIntNode(BaseNode):
 
 
 class ParseFloatNode(BaseNode):
+    """
+    Parses an input type to a float
+
+    Inputs
+    ------
+    in: Source of the data to be parsed
+
+    Outputs
+    -------
+    out: Parsed float output
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -276,6 +300,18 @@ class ParseFloatNode(BaseNode):
 
 
 class TypeNode(BaseNode):
+    """
+    Outputs a string containing the type of the input
+
+    Inputs
+    ------
+    in: Value to check the type of
+
+    Outputs
+    -------
+    out: String value of input type
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -367,6 +403,20 @@ class VariableNode(BaseNode):
 
 
 class IncrementNode(BaseNode):
+    """
+    Keeps an internal state which will be incremented or read depending on activated output
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    increment: First adds 1 to internal state, then outputs new value
+
+    value: Reads the internal state without modifying it
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -384,6 +434,19 @@ class IncrementNode(BaseNode):
 
 
 class EqualsNode(BaseNode):
+    """
+    Checks whether two inputs are equal or not
+
+    Inputs
+    ------
+    arg1: First operand of the equals statement
+
+    arg2: Second operand of the equals statement
+
+    Outputs
+    -------
+    equal: A boolean being true if arg1 and arg2 are equal and otherwise being false
+    """
     def __init__(self):
         super().__init__()
 
@@ -396,6 +459,17 @@ class EqualsNode(BaseNode):
 
 
 class NotNode(BaseNode):
+    """
+    A boolean logic node performing the boolean not operation
+
+    Inputs
+    ------
+    in: Boolean value to be transformed
+
+    Outputs
+    -------
+    out: Boolean value representing the boolean not operation performed on input in
+    """
     def __init__(self):
         super().__init__()
 
@@ -407,6 +481,19 @@ class NotNode(BaseNode):
 
 
 class AddNode(BaseNode):
+    """
+    Adds two numbers together
+
+    Inputs
+    ------
+    arg1: First (left-hand) operand of the addition operation
+
+    arg2: Second (right-hand) operand of the addition operation
+
+    Outputs
+    -------
+    result: Sum of inputs arg1 and arg2
+    """
     def __init__(self):
         super().__init__()
 
@@ -436,6 +523,19 @@ class AddNode(BaseNode):
 
 
 class MultiplyNode(BaseNode):
+    """
+    Multiplies two numbers together
+
+    Inputs
+    ------
+    arg1: First (left-hand) operand of the multiplication operation
+
+    arg2: Second (right-hand) operand of the multiplication operation
+
+    Outputs
+    -------
+    out: Product of inputs arg1 and arg2
+    """
     def __init__(self):
         super().__init__()
 
@@ -465,6 +565,19 @@ class MultiplyNode(BaseNode):
 
 
 class LoopNode(BaseNode):
+    """
+    Loops a certain number of times based on the state of an input
+
+    Inputs
+    ------
+    iter: Node will continue to loop as long as this input resolves to be boolean true
+
+    value: The value which will be passed through once iter becomes false
+
+    Outputs
+    -------
+    value: Outputted value of the loop, passed through from the value input
+    """
     def __init__(self):
         super().__init__()
 
