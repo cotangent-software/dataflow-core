@@ -13,3 +13,6 @@ function utils_array_length(array) {
 function utils_array_clone(array) {
     return [ ...array ];
 }
+function utils_array_concat(array1, array2) {
+    return array1.concat(array2);
+}

@@ -858,7 +858,7 @@ class ArrayMergeNode(BaseNode):
 
         for n in range(self.array_count):
             self.declare_input('in_%d' % n)
-        self.declare_output('merged', self.get_output__merged)
+        self.declare_output('merged', self.get_output__merged, self.deploy_output__merged)
 
     def get_output__merged(self, env):
         out = []
@@ -869,6 +869,24 @@ class ArrayMergeNode(BaseNode):
             else:
                 out.append(val)
         return out
+
+    def deploy_output__merged(self):
+        merged_var = NodeOutputVariableName(self.id, 'merged')
+        input_deploys = []
+        input_concats = []
+        for n in range(self.array_count):
+            input_deploys.append(self.resolve_input_deploy('in_%d' % n))
+            input_concats.append(
+                VariableUpdateStatement(
+                    merged_var,
+                    UtilsArrayConcat(merged_var, self.get_input_connection_variable_name('in_%d' % n))
+                )
+            )
+        return LanguageConcat(
+            *input_deploys,
+            VariableDeclareStatement(merged_var, LanguageValue(EmptyArraySymbol())),
+            *input_concats
+        )
 
 
 class DictionaryNode(BaseNode):

@@ -99,10 +99,13 @@ def sqlite_test():
 
 
 def deploy_test():
-    data_node = DataSourceNode([0, 1, 2, 3])
+    cat_node = ArrayMergeNode(3)
     map_node = MapNode()
     add_node = AddNode()
-    BaseNode.connect(data_node, map_node, 'data', 'array')
+    BaseNode.connect(DataSourceNode(0), cat_node, 'data', 'in_0')
+    BaseNode.connect(DataSourceNode([1, 2]), cat_node, 'data', 'in_1')
+    BaseNode.connect(DataSourceNode(3), cat_node, 'data', 'in_2')
+    BaseNode.connect(cat_node, map_node, 'merged', 'array')
     BaseNode.connect(map_node, add_node, 'entry', 'arg1')
     BaseNode.connect(DataSourceNode(2), add_node, 'data', 'arg2')
     BaseNode.connect(add_node, map_node, 'result', 'value')

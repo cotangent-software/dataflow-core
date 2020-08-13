@@ -2,7 +2,12 @@ import base64
 from typing import Union
 
 
-class LanguageValue:
+class LanguageBase:
+    def __es6__(self):
+        pass
+
+
+class LanguageValue(LanguageBase):
     def __init__(self, value):
         self.value = value
 
@@ -11,7 +16,7 @@ class LanguageValue:
         if t == str:
             return f'Buffer.from(\'{base64.b64encode(self.value.encode("utf-8")).decode("utf-8")}\', \'base64' \
                    f'\').toString()'
-        if issubclass(t, LanguageValue):
+        if issubclass(t, LanguageBase):
             return self.value.__es6__()
         else:
             return self.value
@@ -25,9 +30,8 @@ class LanguageNone(LanguageValue):
         return 'null'
 
 
-class LanguageNoop:
-    @staticmethod
-    def __es6__():
+class LanguageNoop(LanguageBase):
+    def __es6__(self):
         return ''
 
 
@@ -45,52 +49,49 @@ class LanguageOperation(LanguageValue):
         return f'({left_val}{self.op.__es6__()}{right_val}) '
 
 
-class BooleanNotSymbol:
-    @staticmethod
-    def __es6__():
+class BooleanNotSymbol(LanguageBase):
+    def __es6__(self):
         return '!'
 
 
-class AddSymbol:
-    @staticmethod
-    def __es6__():
+class AddSymbol(LanguageBase):
+    def __es6__(self):
         return '+'
 
 
-class MultiplySymbol:
-    @staticmethod
-    def __es6__():
+class MultiplySymbol(LanguageBase):
+    def __es6__(self):
         return '*'
 
 
-class CompareEqualsSymbol:
-    @staticmethod
-    def __es6__():
+class CompareEqualsSymbol(LanguageBase):
+    def __es6__(self):
         return '==='
 
 
-class LessThanSymbol:
-    @staticmethod
-    def __es6__():
+class LessThanSymbol(LanguageBase):
+    def __es6__(self):
         return '<'
 
 
-class GreaterThanSymbol:
-    @staticmethod
-    def __es6__():
+class GreaterThanSymbol(LanguageBase):
+    def __es6__(self):
         return '>'
 
 
-class LessThanOrEqualSymbol:
-    @staticmethod
-    def __es6__():
+class LessThanOrEqualSymbol(LanguageBase):
+    def __es6__(self):
         return '<='
 
 
-class GreaterThanOrEqualSymbol:
-    @staticmethod
-    def __es6__():
+class GreaterThanOrEqualSymbol(LanguageBase):
+    def __es6__(self):
         return '>='
+
+
+class EmptyArraySymbol(LanguageBase):
+    def __es6__(self):
+        return '[]'
 
 
 class VariableName(LanguageValue):
@@ -285,6 +286,11 @@ class UtilsArrayLength(FunctionCall):
 class UtilsArrayClone(FunctionCall):
     def __init__(self, array: LanguageValue):
         super().__init__(VariableName('utils_array_clone'), array)
+
+
+class UtilsArrayConcat(FunctionCall):
+    def __init__(self, array1: LanguageValue, array2: LanguageValue):
+        super().__init__(VariableName('utils_array_concat'), array1, array2)
 
 
 def deploy(exposed_node, exposed_output):
