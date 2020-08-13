@@ -25,6 +25,12 @@ class LanguageNone(LanguageValue):
         return 'null'
 
 
+class LanguageNoop:
+    @staticmethod
+    def __es6__():
+        return ''
+
+
 class LanguageOperation(LanguageValue):
     def __init__(self, op, left: Union[LanguageValue, type(None)], right: Union[LanguageValue, type(None)]):
         super().__init__(None)
@@ -63,12 +69,46 @@ class CompareEqualsSymbol:
         return '==='
 
 
+class LessThanSymbol:
+    @staticmethod
+    def __es6__():
+        return '<'
+
+
+class GreaterThanSymbol:
+    @staticmethod
+    def __es6__():
+        return '>'
+
+
+class LessThanOrEqualSymbol:
+    @staticmethod
+    def __es6__():
+        return '<='
+
+
+class GreaterThanOrEqualSymbol:
+    @staticmethod
+    def __es6__():
+        return '>='
+
+
 class VariableName(LanguageValue):
-    def __init__(self, name: str):
+    def __init__(self, name: Union[str, type(None)]):
         super().__init__(name)
 
     def __es6__(self):
         return self.value
+
+
+class ArrayIndex(VariableName):
+    def __init__(self, array: LanguageValue, index: LanguageValue):
+        super().__init__(None)
+        self.array = array
+        self.index = index
+
+    def __es6__(self):
+        return f'{self.array.__es6__()}[{self.index.__es6__()}]'
 
 
 class NodeOutputVariableName(VariableName):
@@ -76,27 +116,56 @@ class NodeOutputVariableName(VariableName):
         super().__init__(f'v__{node_id}_{output_name}')
 
 
+class NodePrivateVariableName(VariableName):
+    def __init__(self, node_id, internal_name):
+        super().__init__(f'vi__{node_id}_{internal_name}')
+
+
 class NodeOutputFunctionName(VariableName):
     def __init__(self, node_id, output_name):
         super().__init__(f'f__{node_id}_{output_name}')
 
 
-class VariableDeclareStatement:
+class LanguageStatement:
+    def __init__(self, value):
+        self.value = value
+
+    def __es6__(self):
+        return f'{self.value.__es6__()};'
+
+
+class VariableDeclare:
     def __init__(self, variable_name: VariableName, value: LanguageValue):
         self.variable_name = variable_name
         self.value = value
 
     def __es6__(self):
-        return f'let {self.variable_name.__es6__()} = {self.value.__es6__()};'
+        return f'let {self.variable_name.__es6__()} = {self.value.__es6__()}'
 
 
-class VariableUpdateStatement:
+class VariableDeclareStatement(VariableDeclare):
+    def __init__(self, variable_name: VariableName, value: LanguageValue):
+        super().__init__(variable_name, value)
+
+    def __es6__(self):
+        return f'{super().__es6__()};'
+
+
+class VariableUpdate:
     def __init__(self, variable_name: VariableName, value: LanguageValue):
         self.variable_name = variable_name
         self.value = value
 
     def __es6__(self):
-        return f'{self.variable_name.__es6__()} = {self.value.__es6__()};'
+        return f'{self.variable_name.__es6__()} = {self.value.__es6__()}'
+
+
+class VariableUpdateStatement(VariableUpdate):
+    def __init__(self, variable_name: VariableName, value: LanguageValue):
+        super().__init__(variable_name, value)
+
+    def __es6__(self):
+        return f'{super().__es6__()};'
 
 
 class ReturnStatement:
@@ -169,6 +238,23 @@ class IfStatement:
         return f'{if_value}{condition_part} {{\n{self.body.__es6__()}\n}}'
 
 
+class SimpleLoopStatement:
+    def __init__(self, variable_name: VariableName, start: LanguageValue, end: LanguageValue, body):
+        self.variable_name = variable_name
+        self.start = start
+        self.end = end
+        self.body = body
+
+    def __es6__(self):
+        init = VariableDeclareStatement(self.variable_name, self.start)
+        condition = LanguageStatement(LanguageOperation(LessThanSymbol(), self.variable_name, self.end))
+        update = VariableUpdate(
+            self.variable_name,
+            LanguageOperation(AddSymbol(), self.variable_name, LanguageValue(1))
+        )
+        return f'for({init.__es6__()} {condition.__es6__()} {update.__es6__()}) {{\n{self.body.__es6__()}\n}}'
+
+
 class LanguageConcat:
     def __init__(self, *statements):
         self.statements = statements
@@ -184,6 +270,21 @@ class UtilsBody(LanguageValue):
     def __es6__(self):
         with open('utils/es6.js', 'r') as fh:
             return fh.read()
+
+
+class UtilsType(FunctionCall):
+    def __init__(self, array: LanguageValue):
+        super().__init__(VariableName('utils_type'), array)
+
+
+class UtilsArrayLength(FunctionCall):
+    def __init__(self, array: LanguageValue):
+        super().__init__(VariableName('utils_array_length'), array)
+
+
+class UtilsArrayClone(FunctionCall):
+    def __init__(self, array: LanguageValue):
+        super().__init__(VariableName('utils_array_clone'), array)
 
 
 def deploy(exposed_node, exposed_output):

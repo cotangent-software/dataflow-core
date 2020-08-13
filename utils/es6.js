@@ -7,3 +7,9 @@ function utils_type(obj) {
     if(t === 'string') return 'string';
     return t;
 }
+function utils_array_length(array) {
+    return array.length;
+}
+function utils_array_clone(array) {
+    return [ ...array ];
+}

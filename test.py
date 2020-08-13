@@ -99,23 +99,23 @@ def sqlite_test():
 
 
 def deploy_test():
-    switch_node = SwitchNode(2)
-    BaseNode.connect(DataSourceNode(4), switch_node, 'data', 'value')
-    BaseNode.connect(DataSourceNode(14), switch_node, 'data', 'default')
-    BaseNode.connect(DataSourceNode(0), switch_node, 'data', 'test_0')
-    BaseNode.connect(DataSourceNode(0), switch_node, 'data', 'return_0')
-    BaseNode.connect(DataSourceNode(4), switch_node, 'data', 'test_1')
-    BaseNode.connect(DataSourceNode('Hello world'), switch_node, 'data', 'return_1')
+    data_node = DataSourceNode([0, 1, 2, 3])
+    map_node = MapNode()
+    add_node = AddNode()
+    BaseNode.connect(data_node, map_node, 'data', 'array')
+    BaseNode.connect(map_node, add_node, 'entry', 'arg1')
+    BaseNode.connect(DataSourceNode(2), add_node, 'data', 'arg2')
+    BaseNode.connect(add_node, map_node, 'result', 'value')
 
     from dataflow.gen import deploy
     code = LanguageConcat(
-        deploy(switch_node, 'selected'),
+        deploy(map_node, 'mapped'),
         FunctionCall(VariableName('main'))
     )
     print(code.__es6__())
-    print(switch_node.resolve_output('selected'))
-    with open('deploy.js', 'w') as fh:
+    with open('deploy.min.js', 'w') as fh:
         fh.write(code.__es6__())
+    print(map_node.resolve_output('mapped'))
 
 
 deploy_test()

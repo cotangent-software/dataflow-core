@@ -768,10 +768,10 @@ class MapNode(BaseNode):
         super().__init__()
 
         self.declare_input('array')
-        self.declare_input('value', True)
-        self.declare_output('mapped', self.get_output__mapped)
-        self.declare_output('entry', self.get_ioutput__entry, True)
-        self.declare_output('index', self.get_ioutput__index, True)
+        self.declare_input('value', internal=True)
+        self.declare_output('mapped', self.get_output__mapped, self.deploy_output__mapped)
+        self.declare_output('entry', self.get_ioutput__entry, self.deploy_ioutput__entry, internal=True)
+        self.declare_output('index', self.get_ioutput__index, self.deploy_ioutput__index, internal=True)
 
     def get_output__mapped(self, env):
         arr = self.resolve_input('array', env)
@@ -782,11 +782,60 @@ class MapNode(BaseNode):
             out_arr.append(self.resolve_input('value', env))
         return out_arr
 
+    def deploy_output__mapped(self):
+        i_var = NodePrivateVariableName(self.id, 'i')
+        entry_var = NodeOutputVariableName(self.id, 'entry')
+        index_var = NodeOutputVariableName(self.id, 'index')
+        mapped_var = NodeOutputVariableName(self.id, 'mapped')
+        return LanguageConcat(
+            self.resolve_input_deploy('array'),
+            VariableDeclareStatement(
+                entry_var,
+                LanguageNone()
+            ),
+            VariableDeclareStatement(
+                index_var,
+                LanguageNone()
+            ),
+            self.resolve_input_deploy_function('value'),
+            VariableDeclareStatement(
+                mapped_var,
+                UtilsArrayClone(self.get_input_connection_variable_name('array'))
+            ),
+            SimpleLoopStatement(
+                i_var,
+                LanguageValue(0),
+                UtilsArrayLength(self.get_input_connection_variable_name('array')),
+                LanguageConcat(
+                    VariableUpdateStatement(index_var, i_var),
+                    VariableUpdateStatement(
+                        entry_var,
+                        ArrayIndex(
+                            self.get_input_connection_variable_name('array'),
+                            i_var
+                        )
+                    ),
+                    VariableUpdateStatement(
+                        ArrayIndex(mapped_var, i_var),
+                        FunctionCall(
+                            self.get_input_connection_function_name('value')
+                        )
+                    )
+                )
+            )
+        )
+
     def get_ioutput__entry(self, env):
         return self.state['current_entry']
 
+    def deploy_ioutput__entry(self):
+        return LanguageNoop()
+
     def get_ioutput__index(self, env):
         return self.state['current_index']
+
+    def deploy_ioutput__index(self):
+        return LanguageNoop()
 
 
 class ArrayMergeNode(BaseNode):
