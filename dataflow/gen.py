@@ -298,6 +298,11 @@ class UtilsArrayConcat(FunctionCall):
         super().__init__(VariableName('utils_array_concat'), array1, array2)
 
 
+class UtilsArrayIndexOf(FunctionCall):
+    def __init__(self, array: LanguageValue, search: LanguageValue):
+        super().__init__(VariableName('utils_array_index_of'), array, search)
+
+
 def deploy(exposed_node, exposed_output):
     exposed_node.resolve_deploy(exposed_output)
     return LanguageConcat(

@@ -1064,7 +1064,7 @@ class IndexOfNode(BaseNode):
 
         self.declare_input('array')
         self.declare_input('search')
-        self.declare_output('index', self.get_output__index)
+        self.declare_output('index', self.get_output__index, self.deploy_output__index)
 
     def get_output__index(self, env):
         arr = self.resolve_input('array', env)
@@ -1073,6 +1073,19 @@ class IndexOfNode(BaseNode):
             if arr[i] == search:
                 return i
         return -1
+
+    def deploy_output__index(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('array'),
+            self.resolve_input_deploy('search'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'index'),
+                UtilsArrayIndexOf(
+                    self.get_input_connection_variable_name('array'),
+                    self.get_input_connection_variable_name('search'),
+                )
+            )
+        )
 
 
 class SliceNode(BaseNode):

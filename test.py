@@ -99,29 +99,22 @@ def sqlite_test():
 
 
 def deploy_test():
-    dummy_node = DummyNode()
-    dict_node = DictionaryNode(2)
-    print_node = PrintNode()
-    idx_node = IndexNode()
-    BaseNode.connect(DataSourceNode('Real output'), dummy_node, 'data', 'extra')
-    BaseNode.connect(dict_node, print_node, 'object', 'in')
-    BaseNode.connect(print_node, dummy_node, 'out', 'in')
-    BaseNode.connect(DataSourceNode('abc'), dict_node, 'data', 'key_0')
-    BaseNode.connect(DataSourceNode('123'), dict_node, 'data', 'key_1')
-    BaseNode.connect(DataSourceNode('def'), dict_node, 'data', 'value_0')
-    BaseNode.connect(DataSourceNode('456'), dict_node, 'data', 'value_1')
-    BaseNode.connect(dummy_node, idx_node, 'out', 'data')
-    BaseNode.connect(DataSourceNode('abc'), idx_node, 'data', 'index')
+    arr_node = DataSourceNode(['a', 'b', 'c', 'd'])
+    idx_of_node = IndexOfNode()
+    out_node = PassThroughNode()
+    BaseNode.connect(arr_node, idx_of_node, 'data', 'array')
+    BaseNode.connect(DataSourceNode('c'), idx_of_node, 'data', 'search')
+    BaseNode.connect(idx_of_node, out_node, 'index', 'in')
 
     from dataflow.gen import deploy
     code = LanguageConcat(
-        deploy(idx_node, 'value'),
+        deploy(out_node, 'out'),
         FunctionCall(VariableName('main'))
     )
     print(code.__es6__())
     with open('deploy.min.js', 'w') as fh:
         fh.write(code.__es6__())
-    print(idx_node.resolve_output('value'))
+    print(out_node.resolve_output('out'))
 
 
 deploy_test()
