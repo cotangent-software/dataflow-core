@@ -99,7 +99,12 @@ def sqlite_test():
 
 
 def deploy_test():
+    dummy_node = DummyNode()
     dict_node = DictionaryNode(2)
+    print_node = PrintNode()
+    BaseNode.connect(DataSourceNode('Real output'), dummy_node, 'data', 'in')
+    BaseNode.connect(dict_node, print_node, 'object', 'in')
+    BaseNode.connect(print_node, dummy_node, 'out', 'extra')
     BaseNode.connect(DataSourceNode('abc'), dict_node, 'data', 'key_0')
     BaseNode.connect(DataSourceNode('123'), dict_node, 'data', 'key_1')
     BaseNode.connect(DataSourceNode('def'), dict_node, 'data', 'value_0')
@@ -107,13 +112,13 @@ def deploy_test():
 
     from dataflow.gen import deploy
     code = LanguageConcat(
-        deploy(dict_node, 'object'),
+        deploy(dummy_node, 'out'),
         FunctionCall(VariableName('main'))
     )
     print(code.__es6__())
     with open('deploy.min.js', 'w') as fh:
         fh.write(code.__es6__())
-    print(dict_node.resolve_output('object'))
+    print(dummy_node.resolve_output('out'))
 
 
 deploy_test()

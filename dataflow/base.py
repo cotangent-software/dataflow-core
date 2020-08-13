@@ -965,12 +965,22 @@ class DummyNode(BaseNode):
 
         self.declare_input('in')
         self.declare_input('extra')
-        self.declare_output('out', self.get_output__out)
+        self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
         val = self.resolve_input('in', env)
         self.resolve_input('extra', env)
         return val
+
+    def deploy_output__out(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('in'),
+            self.resolve_input_deploy('extra'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'out'),
+                self.get_input_connection_variable_name('in')
+            )
+        )
 
 
 class IndexNode(BaseNode):
