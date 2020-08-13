@@ -912,13 +912,38 @@ class DictionaryNode(BaseNode):
             self.declare_input('key_%d' % i)
             self.declare_input('value_%d' % i)
 
-        self.declare_output('object', self.get_output__object)
+        self.declare_output('object', self.get_output__object, self.deploy_output__object)
 
     def get_output__object(self, env):
         out = {}
         for i in range(self.property_count):
             out[self.resolve_input('key_%d' % i, env)] = self.resolve_input('value_%d' % i, env)
         return out
+
+    def deploy_output__object(self):
+        object_var = NodeOutputVariableName(self.id, 'object')
+        input_deploys = []
+        input_sets = []
+        for n in range(self.property_count):
+            input_deploys.append(self.resolve_input_deploy('key_%d' % n))
+            input_deploys.append(self.resolve_input_deploy('value_%d' % n))
+            input_sets.append(
+                VariableUpdateStatement(
+                    ArrayIndex(
+                        object_var,
+                        self.get_input_connection_variable_name('key_%d' % n)
+                    ),
+                    self.get_input_connection_variable_name('value_%d' % n)
+                )
+            )
+        return LanguageConcat(
+            *input_deploys,
+            VariableDeclareStatement(
+                object_var,
+                LanguageValue(EmptyDictSymbol())
+            ),
+            *input_sets
+        )
 
 
 class DummyNode(BaseNode):

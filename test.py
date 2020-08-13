@@ -99,26 +99,21 @@ def sqlite_test():
 
 
 def deploy_test():
-    cat_node = ArrayMergeNode(3)
-    map_node = MapNode()
-    add_node = AddNode()
-    BaseNode.connect(DataSourceNode(0), cat_node, 'data', 'in_0')
-    BaseNode.connect(DataSourceNode([1, 2]), cat_node, 'data', 'in_1')
-    BaseNode.connect(DataSourceNode(3), cat_node, 'data', 'in_2')
-    BaseNode.connect(cat_node, map_node, 'merged', 'array')
-    BaseNode.connect(map_node, add_node, 'entry', 'arg1')
-    BaseNode.connect(DataSourceNode(2), add_node, 'data', 'arg2')
-    BaseNode.connect(add_node, map_node, 'result', 'value')
+    dict_node = DictionaryNode(2)
+    BaseNode.connect(DataSourceNode('abc'), dict_node, 'data', 'key_0')
+    BaseNode.connect(DataSourceNode('123'), dict_node, 'data', 'key_1')
+    BaseNode.connect(DataSourceNode('def'), dict_node, 'data', 'value_0')
+    BaseNode.connect(DataSourceNode('456'), dict_node, 'data', 'value_1')
 
     from dataflow.gen import deploy
     code = LanguageConcat(
-        deploy(map_node, 'mapped'),
+        deploy(dict_node, 'object'),
         FunctionCall(VariableName('main'))
     )
     print(code.__es6__())
     with open('deploy.min.js', 'w') as fh:
         fh.write(code.__es6__())
-    print(map_node.resolve_output('mapped'))
+    print(dict_node.resolve_output('object'))
 
 
 deploy_test()

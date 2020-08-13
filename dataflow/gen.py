@@ -94,6 +94,11 @@ class EmptyArraySymbol(LanguageBase):
         return '[]'
 
 
+class EmptyDictSymbol(LanguageBase):
+    def __es6__(self):
+        return '{}'
+
+
 class VariableName(LanguageValue):
     def __init__(self, name: Union[str, type(None)]):
         super().__init__(name)
