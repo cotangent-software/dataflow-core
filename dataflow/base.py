@@ -1005,7 +1005,7 @@ class IndexNode(BaseNode):
 
         self.declare_input('data')
         self.declare_input('index')
-        self.declare_output('value', self.get_output__value)
+        self.declare_output('value', self.get_output__value, self.deploy_output__value)
 
     def get_output__value(self, env):
         data = self.resolve_input('data', env)
@@ -1024,6 +1024,19 @@ class IndexNode(BaseNode):
                 return data[idx]
             else:
                 return getattr(data, idx)
+
+    def deploy_output__value(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('data'),
+            self.resolve_input_deploy('index'),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'value'),
+                ArrayIndex(
+                    self.get_input_connection_variable_name('data'),
+                    self.get_input_connection_variable_name('index')
+                )
+            )
+        )
 
     @staticmethod
     def is_int_indexed(obj):

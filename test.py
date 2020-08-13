@@ -102,23 +102,26 @@ def deploy_test():
     dummy_node = DummyNode()
     dict_node = DictionaryNode(2)
     print_node = PrintNode()
-    BaseNode.connect(DataSourceNode('Real output'), dummy_node, 'data', 'in')
+    idx_node = IndexNode()
+    BaseNode.connect(DataSourceNode('Real output'), dummy_node, 'data', 'extra')
     BaseNode.connect(dict_node, print_node, 'object', 'in')
-    BaseNode.connect(print_node, dummy_node, 'out', 'extra')
+    BaseNode.connect(print_node, dummy_node, 'out', 'in')
     BaseNode.connect(DataSourceNode('abc'), dict_node, 'data', 'key_0')
     BaseNode.connect(DataSourceNode('123'), dict_node, 'data', 'key_1')
     BaseNode.connect(DataSourceNode('def'), dict_node, 'data', 'value_0')
     BaseNode.connect(DataSourceNode('456'), dict_node, 'data', 'value_1')
+    BaseNode.connect(dummy_node, idx_node, 'out', 'data')
+    BaseNode.connect(DataSourceNode('abc'), idx_node, 'data', 'index')
 
     from dataflow.gen import deploy
     code = LanguageConcat(
-        deploy(dummy_node, 'out'),
+        deploy(idx_node, 'value'),
         FunctionCall(VariableName('main'))
     )
     print(code.__es6__())
     with open('deploy.min.js', 'w') as fh:
         fh.write(code.__es6__())
-    print(dummy_node.resolve_output('out'))
+    print(idx_node.resolve_output('value'))
 
 
 deploy_test()
