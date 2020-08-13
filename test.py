@@ -99,18 +99,24 @@ def sqlite_test():
 
 
 def deploy_test():
-    env_node = ReadEnvironmentNode()
+    increment_node = IncrementNode()
+    dummy_node = DummyNode()
+    dummy2_node = DummyNode()
     out_node = PassThroughNode()
-    BaseNode.connect(env_node, out_node, 'value', 'in')
+    BaseNode.connect(dummy_node, out_node, 'out', 'in')
+    BaseNode.connect(increment_node, dummy_node, 'value', 'in')
+    BaseNode.connect(dummy2_node, dummy_node, 'out', 'extra')
+    BaseNode.connect(increment_node, dummy2_node, 'increment', 'in')
+    BaseNode.connect(increment_node, dummy2_node, 'increment', 'extra')
 
     from dataflow.gen import deploy
     code = LanguageConcat(
         deploy(out_node, 'out'),
         FunctionCall(VariableName('main'))
     )
-    print(code.__es6__())
+    print(code.__es6__(DeployContext()))
     with open('deploy.min.js', 'w') as fh:
-        fh.write(code.__es6__())
+        fh.write(code.__es6__(DeployContext()))
     print(out_node.resolve_output('out'))
 
 

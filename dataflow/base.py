@@ -141,6 +141,40 @@ class BaseNode:
         else:
             return LanguageNoop()
 
+    def deploy_state_init(self, name, default):
+        state_var = ArrayIndex(
+                        VariableName('state'),
+                        LanguageValue(NodePrivateVariableName(self.id, name).value)
+                    )
+        return LanguageConcat(
+            IfStatement(
+                LanguageOperation(
+                    CompareEqualsSymbol(),
+                    state_var,
+                    LanguageUndefined()
+                ),
+                VariableSetStatement(state_var, default, dictionary_set=True),
+                if_type='if'
+            )
+        )
+
+    def deploy_state_value(self, name):
+        return ArrayIndex(
+            VariableName('state'),
+            LanguageValue(NodePrivateVariableName(self.id, name).value)
+        )
+
+    def deploy_state_update(self, name, value):
+        state_var = ArrayIndex(
+            VariableName('state'),
+            LanguageValue(NodePrivateVariableName(self.id, name).value)
+        )
+        return VariableSetStatement(
+            state_var,
+            value,
+            dictionary_set=True
+        )
+
     def cache_output(self, name, value):
         self.output_cache[name] = value
 
@@ -228,7 +262,7 @@ class DataSourceNode(BaseNode):
         return self.data
 
     def deploy_output__data(self):
-        return VariableDeclareStatement(NodeOutputVariableName(self.id, 'data'), LanguageValue(self.data))
+        return VariableSetStatement(NodeOutputVariableName(self.id, 'data'), LanguageValue(self.data))
 
 
 class PassThroughNode(BaseNode):
@@ -256,8 +290,8 @@ class PassThroughNode(BaseNode):
     def deploy_output__out(self):
         return LanguageConcat(
             self.resolve_input_deploy('in'),
-            VariableDeclareStatement(NodeOutputVariableName(self.id, 'out'),
-                                     self.get_input_connection_variable_name('in'))
+            VariableSetStatement(NodeOutputVariableName(self.id, 'out'),
+                                 self.get_input_connection_variable_name('in'))
         )
 
 
@@ -288,8 +322,8 @@ class PrintNode(BaseNode):
     def deploy_output__out(self):
         return LanguageConcat(
             self.resolve_input_deploy('in'),
-            VariableDeclareStatement(NodeOutputVariableName(self.id, 'out'),
-                                     self.get_input_connection_variable_name('in')),
+            VariableSetStatement(NodeOutputVariableName(self.id, 'out'),
+                                 self.get_input_connection_variable_name('in')),
             PrintStatement(NodeOutputVariableName(self.id, 'out'))
         )
 
@@ -319,7 +353,7 @@ class ParseIntNode(BaseNode):
     def deploy_output__out(self):
         return LanguageConcat(
             self.resolve_input_deploy('in'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'out'), ParseIntCall(self.get_input_connection_variable_name('in'))
             )
         )
@@ -350,7 +384,7 @@ class ParseFloatNode(BaseNode):
     def deploy_output__out(self):
         return LanguageConcat(
             self.resolve_input_deploy('in'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'out'), ParseFloatCall(self.get_input_connection_variable_name('in'))
             )
         )
@@ -392,7 +426,7 @@ class TypeNode(BaseNode):
     def deploy_output__out(self):
         return LanguageConcat(
             self.resolve_input_deploy('in'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'out'),
                 FunctionCall(VariableName('utils_type'), self.get_input_connection_variable_name('in'))
             )
@@ -452,7 +486,7 @@ class SwitchNode(BaseNode):
                         FunctionCall(self.get_input_connection_function_name('test_%d' % n)),
                         self.get_input_connection_variable_name('value')
                     ),
-                    VariableUpdateStatement(
+                    VariableSetStatement(
                         NodeOutputVariableName(self.id, 'selected'),
                         FunctionCall(self.get_input_connection_function_name('return_%d' % n))
                     ),
@@ -463,7 +497,7 @@ class SwitchNode(BaseNode):
         if_statements.append(
             IfStatement(
                 None,
-                VariableUpdateStatement(
+                VariableSetStatement(
                     NodeOutputVariableName(self.id, 'selected'),
                     FunctionCall(self.get_input_connection_function_name('default'))
                 ),
@@ -475,7 +509,7 @@ class SwitchNode(BaseNode):
             self.resolve_input_deploy('value'),
             *test_functions,
             *return_functions,
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'selected'),
                 LanguageNone()
             ),
@@ -543,15 +577,40 @@ class IncrementNode(BaseNode):
 
         self.state['value'] = 0
 
-        self.declare_output('increment', self.get_output__increment)
-        self.declare_output('value', self.get_output__value)
+        self.declare_output('increment', self.get_output__increment, self.deploy_output__increment)
+        self.declare_output('value', self.get_output__value, self.deploy_output__value)
 
     def get_output__increment(self, env):
         self.state['value'] += 1
         return self.state['value']
 
+    def deploy_output__increment(self):
+        increment_var = NodeOutputVariableName(self.id, 'increment')
+
+        return LanguageConcat(
+            self.deploy_state_init('value', LanguageValue(0)),
+            VariableSetStatement(
+                increment_var,
+                LanguageOperation(
+                    AddSymbol(),
+                    self.deploy_state_value('value'),
+                    LanguageValue(1)
+                )
+            ),
+            self.deploy_state_update('value', increment_var)
+        )
+
     def get_output__value(self, env):
         return self.state['value']
+
+    def deploy_output__value(self):
+        return LanguageConcat(
+            self.deploy_state_init('value', LanguageValue(0)),
+            VariableSetStatement(
+                NodeOutputVariableName(self.id, 'value'),
+                self.deploy_state_value('value')
+            )
+        )
 
 
 class EqualsNode(BaseNode):
@@ -583,7 +642,7 @@ class EqualsNode(BaseNode):
         return LanguageConcat(
             self.resolve_input_deploy('arg1'),
             self.resolve_input_deploy('arg2'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'equal'),
                 LanguageOperation(
                     CompareEqualsSymbol(),
@@ -619,7 +678,7 @@ class NotNode(BaseNode):
     def deploy_output__out(self):
         return LanguageConcat(
             self.resolve_input_deploy('in'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'out'),
                 LanguageOperation(
                     BooleanNotSymbol(),
@@ -663,7 +722,7 @@ class AddNode(BaseNode):
         return LanguageConcat(
             conn1.output.resolve_deploy(conn1.output_name),
             conn2.output.resolve_deploy(conn2.output_name),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'result'),
                 LanguageOperation(AddSymbol(),
                                   NodeOutputVariableName(conn1.output.id, conn1.output_name),
@@ -706,7 +765,7 @@ class MultiplyNode(BaseNode):
         return LanguageConcat(
             conn1.output.resolve_deploy(conn1.output_name),
             conn2.output.resolve_deploy(conn2.output_name),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'result'),
                 LanguageOperation(MultiplySymbol(),
                                   NodeOutputVariableName(conn1.output.id, conn1.output_name),
@@ -798,16 +857,16 @@ class MapNode(BaseNode):
         mapped_var = NodeOutputVariableName(self.id, 'mapped')
         return LanguageConcat(
             self.resolve_input_deploy('array'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 entry_var,
                 LanguageNone()
             ),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 index_var,
                 LanguageNone()
             ),
             self.resolve_input_deploy_function('value'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 mapped_var,
                 UtilsArrayClone(self.get_input_connection_variable_name('array'))
             ),
@@ -816,15 +875,15 @@ class MapNode(BaseNode):
                 LanguageValue(0),
                 UtilsArrayLength(self.get_input_connection_variable_name('array')),
                 LanguageConcat(
-                    VariableUpdateStatement(index_var, i_var),
-                    VariableUpdateStatement(
+                    VariableSetStatement(index_var, i_var),
+                    VariableSetStatement(
                         entry_var,
                         ArrayIndex(
                             self.get_input_connection_variable_name('array'),
                             i_var
                         )
                     ),
-                    VariableUpdateStatement(
+                    VariableSetStatement(
                         ArrayIndex(mapped_var, i_var),
                         FunctionCall(
                             self.get_input_connection_function_name('value')
@@ -886,14 +945,14 @@ class ArrayMergeNode(BaseNode):
         for n in range(self.array_count):
             input_deploys.append(self.resolve_input_deploy('in_%d' % n))
             input_concats.append(
-                VariableUpdateStatement(
+                VariableSetStatement(
                     merged_var,
                     UtilsArrayConcat(merged_var, self.get_input_connection_variable_name('in_%d' % n))
                 )
             )
         return LanguageConcat(
             *input_deploys,
-            VariableDeclareStatement(merged_var, LanguageValue(EmptyArraySymbol())),
+            VariableSetStatement(merged_var, LanguageValue(EmptyArraySymbol())),
             *input_concats
         )
 
@@ -937,7 +996,7 @@ class DictionaryNode(BaseNode):
             input_deploys.append(self.resolve_input_deploy('key_%d' % n))
             input_deploys.append(self.resolve_input_deploy('value_%d' % n))
             input_sets.append(
-                VariableUpdateStatement(
+                VariableSetStatement(
                     ArrayIndex(
                         object_var,
                         self.get_input_connection_variable_name('key_%d' % n)
@@ -947,7 +1006,7 @@ class DictionaryNode(BaseNode):
             )
         return LanguageConcat(
             *input_deploys,
-            VariableDeclareStatement(
+            VariableSetStatement(
                 object_var,
                 LanguageValue(EmptyDictSymbol())
             ),
@@ -977,15 +1036,14 @@ class DummyNode(BaseNode):
         self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
-        val = self.resolve_input('in', env)
         self.resolve_input('extra', env)
-        return val
+        return self.resolve_input('in', env)
 
     def deploy_output__out(self):
         return LanguageConcat(
-            self.resolve_input_deploy('in'),
             self.resolve_input_deploy('extra'),
-            VariableDeclareStatement(
+            self.resolve_input_deploy('in'),
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'out'),
                 self.get_input_connection_variable_name('in')
             )
@@ -1038,7 +1096,7 @@ class IndexNode(BaseNode):
         return LanguageConcat(
             self.resolve_input_deploy('data'),
             self.resolve_input_deploy('index'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'value'),
                 ArrayIndex(
                     self.get_input_connection_variable_name('data'),
@@ -1087,7 +1145,7 @@ class IndexOfNode(BaseNode):
         return LanguageConcat(
             self.resolve_input_deploy('array'),
             self.resolve_input_deploy('search'),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'index'),
                 UtilsArrayIndexOf(
                     self.get_input_connection_variable_name('array'),
@@ -1139,7 +1197,7 @@ class SliceNode(BaseNode):
             self.resolve_input_deploy('slice_start', allow_unconnected=True),
             self.resolve_input_deploy('slice_end', allow_unconnected=True),
             self.resolve_input_deploy('slice_step', allow_unconnected=True),
-            VariableDeclareStatement(
+            VariableSetStatement(
                 NodeOutputVariableName(self.id, 'array'),
                 UtilsArraySlice(
                     self.get_input_connection_variable_name('array'),
@@ -1173,7 +1231,7 @@ class ReadEnvironmentNode(IndexNode):
         return env
 
     def deploy_output__value(self):
-        return VariableDeclareStatement(
+        return VariableSetStatement(
             NodeOutputVariableName(self.id, 'value'),
             VariableName('env')
         )
