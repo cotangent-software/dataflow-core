@@ -99,21 +99,26 @@ def sqlite_test():
 
 
 def deploy_test():
+    loop_node = LoopNode()
+    iter_node = IncrementNode()
+    eq_node = EqualsNode()
+    not_node = NotNode()
     var_node = VariableNode(0)
-    print_node = PrintNode()
-    dummy_node = DummyNode()
-    dummy2_node = DummyNode()
-    out_node = PassThroughNode()
+    split_node = DummyNode()
     add_node = AddNode()
-    BaseNode.connect(dummy_node, out_node, 'out', 'in')
-    BaseNode.connect(var_node, dummy_node, 'update', 'in')
-    BaseNode.connect(dummy2_node, dummy_node, 'out', 'extra')
-    BaseNode.connect(print_node, dummy2_node, 'out', 'extra')
-    BaseNode.connect(var_node, dummy2_node, 'update', 'in')
-    BaseNode.connect(var_node, print_node, 'value', 'in')
+    out_node = PassThroughNode()
+    BaseNode.connect(loop_node, out_node, 'value', 'in')
+    BaseNode.connect(split_node, loop_node, 'out', 'iter')
+    BaseNode.connect(not_node, split_node, 'out', 'in')
+    BaseNode.connect(eq_node, not_node, 'equal', 'in')
+    BaseNode.connect(iter_node, eq_node, 'increment', 'arg1')
+    BaseNode.connect(DataSourceNode(50000), eq_node, 'data', 'arg2')
+    BaseNode.connect(var_node, loop_node, 'value', 'value')
+
+    BaseNode.connect(var_node, split_node, 'update', 'extra')
     BaseNode.connect(add_node, var_node, 'result', 'value')
-    BaseNode.connect(var_node, add_node, 'value', 'arg1')
-    BaseNode.connect(DataSourceNode(4), add_node, 'data', 'arg2')
+    BaseNode.connect(iter_node, add_node, 'value', 'arg1')
+    BaseNode.connect(var_node, add_node, 'value', 'arg2')
 
     from dataflow.gen import deploy
     code = LanguageConcat(

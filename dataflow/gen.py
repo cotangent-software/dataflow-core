@@ -273,6 +273,18 @@ class SimpleLoopStatement(LanguageBase):
         return out
 
 
+class ConditionalLoopStatement(LanguageBase):
+    def __init__(self, condition: LanguageValue, body: LanguageBase):
+        self.condition = condition
+        self.body = body
+
+    def __es6__(self, c: 'DeployContext'):
+        c.push_scope()
+        out = f'while({self.condition.__es6__(c)}) {{\n{self.body.__es6__(c)}\n}}'
+        c.pop_scope()
+        return out
+
+
 class LanguageConcat:
     def __init__(self, *statements):
         self.statements = statements

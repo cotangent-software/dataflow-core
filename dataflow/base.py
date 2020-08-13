@@ -86,7 +86,7 @@ class BaseNode:
         else:
             raise GraphError('Could not find input connection with name \'%s\'' % input_name)
 
-    def get_input_connection_variable_name(self, input_name, allow_unconnected=False) -> LanguageValue:
+    def get_input_connection_variable_name(self, input_name, allow_unconnected=False) -> Union[VariableName, LanguageNone]:
         conn = self.get_input_connection(input_name, allow_unconnected=allow_unconnected)
         if conn is not None:
             return NodeOutputVariableName(conn.output.id, conn.output_name)
@@ -815,7 +815,7 @@ class LoopNode(BaseNode):
         self.declare_input('iter')
         self.declare_input('value')
         self.declare_input('__continue__')
-        self.declare_output('value', self.get_output__value)
+        self.declare_output('value', self.get_output__value, self.deploy_output__value)
         self.declare_output('__continue__', self.get_output____continue__)
 
         BaseNode.connect(self, self, '__continue__', '__continue__')
@@ -827,6 +827,20 @@ class LoopNode(BaseNode):
             return self.resolve_input('__continue__', env)
         else:
             return self.resolve_input('value', env)
+
+    def deploy_output__value(self):
+        return LanguageConcat(
+            self.resolve_input_deploy_function('iter'),
+            ConditionalLoopStatement(
+                FunctionCall(self.get_input_connection_function_name('iter')),
+                LanguageNoop()
+            ),
+            self.resolve_input_deploy('value'),
+            VariableSetStatement(
+                NodeOutputVariableName(self.id, 'value'),
+                self.get_input_connection_variable_name('value')
+            )
+        )
 
     def get_output____continue__(self, env):
         return self.get_output__value(env)
