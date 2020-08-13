@@ -191,12 +191,14 @@ class PrintStatement:
 
 
 class FunctionDeclaration:
-    def __init__(self, name: VariableName, body):
+    def __init__(self, name: VariableName, body, *params):
         self.name = name
         self.body = body
+        self.params = params
 
     def __es6__(self):
-        return f'function {self.name.__es6__()}() {{\n{self.body.__es6__()}\n}}'
+        params_str = ', '.join([x.__es6__() for x in self.params])
+        return f'function {self.name.__es6__()}({params_str}) {{\n{self.body.__es6__()}\n}}'
 
 
 class FunctionCall(LanguageValue):
@@ -317,6 +319,10 @@ def deploy(exposed_node, exposed_output):
             LanguageConcat(
                 exposed_node.resolve_deploy(exposed_output),
                 ReturnStatement(NodeOutputVariableName(exposed_node.id, exposed_output))
+            ),
+            VariableUpdate(
+                VariableName('env'),
+                LanguageValue(EmptyDictSymbol())
             )
         )
     )

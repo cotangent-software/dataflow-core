@@ -1167,10 +1167,16 @@ class ReadEnvironmentNode(IndexNode):
     def __init__(self):
         super().__init__()
 
-        self.declare_output('value', self.get_output__value)
+        self.declare_output('value', self.get_output__value, self.deploy_output__value)
 
     def get_output__value(self, env):
         return env
+
+    def deploy_output__value(self):
+        return VariableDeclareStatement(
+            NodeOutputVariableName(self.id, 'value'),
+            VariableName('env')
+        )
 
 
 class EnvironmentContainer:
