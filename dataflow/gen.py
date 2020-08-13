@@ -194,12 +194,15 @@ class FunctionDeclaration(LanguageBase):
         self.params = params
 
     def __es6__(self, c):
-        c.add_function(self.name)
-        c.push_scope()
-        params_str = ', '.join([x.__es6__(c) for x in self.params])
-        out = f'function {self.name.__es6__(c)}({params_str}) {{\n{self.body.__es6__(c)}\n}}'
-        c.pop_scope()
-        return out
+        if not c.has_function(self.name):
+            c.add_function(self.name)
+            c.push_scope()
+            params_str = ', '.join([x.__es6__(c) for x in self.params])
+            out = f'function {self.name.__es6__(c)}({params_str}) {{\n{self.body.__es6__(c)}\n}}'
+            c.pop_scope()
+            return out
+        else:
+            return LanguageNoop().__es6__(c)
 
 
 class FunctionCall(LanguageValue):

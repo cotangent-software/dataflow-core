@@ -539,8 +539,8 @@ class VariableNode(BaseNode):
         self.state['value'] = self.init_value
 
         self.declare_input('value')
-        self.declare_output('update', self.get_output__update)
-        self.declare_output('value', self.get_output__value)
+        self.declare_output('update', self.get_output__update, self.deploy_output__update)
+        self.declare_output('value', self.get_output__value, self.deploy_output__value)
 
     def get_output__update(self, env):
         next_value = self.resolve_input('value', env)
@@ -548,9 +548,28 @@ class VariableNode(BaseNode):
             self.state['value'] = next_value
         return self.get_output__value(env)
 
+    def deploy_output__update(self):
+        return LanguageConcat(
+            self.resolve_input_deploy_function('value'),
+            self.deploy_state_init('value', LanguageValue(self.init_value)),
+            self.deploy_state_update('value', FunctionCall(self.get_input_connection_function_name('value'))),
+            VariableSetStatement(
+                NodeOutputVariableName(self.id, 'update'),
+                self.deploy_state_value('value')
+            )
+        )
+
     def get_output__value(self, env):
-        print(self.state['value'])
         return self.state['value']
+
+    def deploy_output__value(self):
+        return LanguageConcat(
+            self.deploy_state_init('value', LanguageValue(self.init_value)),
+            VariableSetStatement(
+                NodeOutputVariableName(self.id, 'value'),
+                self.deploy_state_value('value')
+            )
+        )
 
     def reset_state(self):
         super().reset_state()
