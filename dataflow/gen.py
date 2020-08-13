@@ -303,6 +303,11 @@ class UtilsArrayIndexOf(FunctionCall):
         super().__init__(VariableName('utils_array_index_of'), array, search)
 
 
+class UtilsArraySlice(FunctionCall):
+    def __init__(self, array: LanguageValue, slice_start: LanguageValue, slice_end: LanguageValue, slice_step: LanguageValue):
+        super().__init__(VariableName('utils_array_slice'), array, slice_start, slice_end, slice_step)
+
+
 def deploy(exposed_node, exposed_output):
     exposed_node.resolve_deploy(exposed_output)
     return LanguageConcat(

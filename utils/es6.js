@@ -19,3 +19,14 @@ function utils_array_concat(array1, array2) {
 function utils_array_index_of(array, search) {
     return array.indexOf(search);
 }
+function utils_array_slice(array, slice_start, slice_stop, slice_step) {
+    const s = array.slice(slice_start ? slice_start : undefined, slice_stop ? slice_stop : undefined);
+    if(!slice_step) {
+        return s;
+    }
+    const stepped = [];
+    for(let i=0; i<s.length; i+= slice_step) {
+        stepped.push(s[i]);
+    }
+    return stepped;
+}

@@ -100,11 +100,13 @@ def sqlite_test():
 
 def deploy_test():
     arr_node = DataSourceNode(['a', 'b', 'c', 'd'])
-    idx_of_node = IndexOfNode()
+    slice_node = SliceNode()
     out_node = PassThroughNode()
-    BaseNode.connect(arr_node, idx_of_node, 'data', 'array')
-    BaseNode.connect(DataSourceNode('c'), idx_of_node, 'data', 'search')
-    BaseNode.connect(idx_of_node, out_node, 'index', 'in')
+    BaseNode.connect(arr_node, slice_node, 'data', 'array')
+    BaseNode.connect(DataSourceNode(1), slice_node, 'data', 'slice_start')
+    # BaseNode.connect(DataSourceNode(4), slice_node, 'data', 'slice_end')
+    BaseNode.connect(DataSourceNode(2), slice_node, 'data', 'slice_step')
+    BaseNode.connect(slice_node, out_node, 'array', 'in')
 
     from dataflow.gen import deploy
     code = LanguageConcat(

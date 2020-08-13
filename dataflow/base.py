@@ -79,16 +79,19 @@ class BaseNode:
         if deploy_handler is not None:
             self.deploy_handlers[name] = deploy_handler
 
-    def get_input_connection(self, input_name) -> Connection:
+    def get_input_connection(self, input_name, allow_unconnected=False) -> Connection:
         conn = array_find(self.connections, lambda x: x.input_name == input_name and x.input == self)
-        if conn is not None:
+        if conn is not None or allow_unconnected:
             return conn
         else:
             raise GraphError('Could not find input connection with name \'%s\'' % input_name)
 
-    def get_input_connection_variable_name(self, input_name) -> NodeOutputVariableName:
-        conn = self.get_input_connection(input_name)
-        return NodeOutputVariableName(conn.output.id, conn.output_name)
+    def get_input_connection_variable_name(self, input_name, allow_unconnected=False) -> LanguageValue:
+        conn = self.get_input_connection(input_name, allow_unconnected=allow_unconnected)
+        if conn is not None:
+            return NodeOutputVariableName(conn.output.id, conn.output_name)
+        else:
+            return LanguageNone()
 
     def get_input_connection_function_name(self, input_name) -> NodeOutputFunctionName:
         conn = self.get_input_connection(input_name)
@@ -124,13 +127,19 @@ class BaseNode:
             )
         )
 
-    def resolve_input_deploy(self, input_name):
-        conn = self.get_input_connection(input_name)
-        return conn.output.resolve_deploy(conn.output_name)
+    def resolve_input_deploy(self, input_name, allow_unconnected=False):
+        conn = self.get_input_connection(input_name, allow_unconnected=allow_unconnected)
+        if conn is not None:
+            return conn.output.resolve_deploy(conn.output_name)
+        else:
+            return LanguageNoop()
 
-    def resolve_input_deploy_function(self, input_name):
-        conn = self.get_input_connection(input_name)
-        return conn.output.resolve_deploy_function(conn.output_name)
+    def resolve_input_deploy_function(self, input_name, allow_unconnected=False):
+        conn = self.get_input_connection(input_name, allow_unconnected=allow_unconnected)
+        if conn is not None:
+            return conn.output.resolve_deploy_function(conn.output_name)
+        else:
+            return LanguageNoop()
 
     def cache_output(self, name, value):
         self.output_cache[name] = value
@@ -1114,7 +1123,7 @@ class SliceNode(BaseNode):
         self.declare_input('slice_start')
         self.declare_input('slice_end')
         self.declare_input('slice_step')
-        self.declare_output('array', self.get_output__array)
+        self.declare_output('array', self.get_output__array, self.deploy_output__array)
 
     def get_output__array(self, env):
         slice_obj = slice(
@@ -1123,6 +1132,23 @@ class SliceNode(BaseNode):
             self.resolve_input('slice_step', env, allow_unconnected=True)
         )
         return self.resolve_input('array', env)[slice_obj]
+
+    def deploy_output__array(self):
+        return LanguageConcat(
+            self.resolve_input_deploy('array'),
+            self.resolve_input_deploy('slice_start', allow_unconnected=True),
+            self.resolve_input_deploy('slice_end', allow_unconnected=True),
+            self.resolve_input_deploy('slice_step', allow_unconnected=True),
+            VariableDeclareStatement(
+                NodeOutputVariableName(self.id, 'array'),
+                UtilsArraySlice(
+                    self.get_input_connection_variable_name('array'),
+                    self.get_input_connection_variable_name('slice_start', allow_unconnected=True),
+                    self.get_input_connection_variable_name('slice_end', allow_unconnected=True),
+                    self.get_input_connection_variable_name('slice_step', allow_unconnected=True),
+                )
+            )
+        )
 
 
 class ReadEnvironmentNode(IndexNode):
