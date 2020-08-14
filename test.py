@@ -1,5 +1,7 @@
 from dataflow.base import *
 from dataflow.db import SQLiteQueryNode, SQLiteDatabaseNode
+from dataflow.math import AddNode, MultiplyNode, SubtractNode, DivideNode, AbsoluteValueNode, PowerNode, RootNode, \
+    LogNode, PiConstantNode, EulerConstantNode, CeilNode, FloorNode, RoundNode, ModulusNode
 from dataflow.web import WebServerNode, WebEndpointNode
 
 
@@ -120,7 +122,6 @@ def deploy_test():
     BaseNode.connect(iter_node, add_node, 'value', 'arg1')
     BaseNode.connect(var_node, add_node, 'value', 'arg2')
 
-    from dataflow.gen import deploy
     code = LanguageConcat(
         deploy(out_node, 'out'),
         FunctionCall(VariableName('main'))
@@ -131,4 +132,62 @@ def deploy_test():
     print(out_node.resolve_output('out'))
 
 
-deploy_test()
+def math_op_deploy_test():
+    out_node = PassThroughNode()
+    add_node = AddNode()
+    subtract_node = SubtractNode()
+    multiply_node = MultiplyNode()
+    divide_node = DivideNode()
+    abs_node = AbsoluteValueNode()
+    power_node = PowerNode()
+    root_node = RootNode()
+    log_node = LogNode()
+    modulus_node = ModulusNode()
+
+    BaseNode.connect(DataSourceNode(1), add_node, 'data', 'arg1')
+    BaseNode.connect(DataSourceNode(4), add_node, 'data', 'arg2')
+    BaseNode.connect(add_node, subtract_node, 'result', 'arg1')
+    BaseNode.connect(DataSourceNode(1), subtract_node, 'data', 'arg2')
+    BaseNode.connect(subtract_node, multiply_node, 'result', 'arg1')
+    BaseNode.connect(DataSourceNode(4), multiply_node, 'data', 'arg2')
+    BaseNode.connect(multiply_node, divide_node, 'result', 'arg1')
+    BaseNode.connect(DataSourceNode(-2), divide_node, 'data', 'arg2')
+    BaseNode.connect(divide_node, abs_node, 'result', 'in')
+    BaseNode.connect(DataSourceNode(2), power_node, 'data', 'base')
+    BaseNode.connect(abs_node, power_node, 'result', 'power')
+    BaseNode.connect(DataSourceNode(2), root_node, 'data', 'root')
+    BaseNode.connect(power_node, root_node, 'result', 'value')
+    BaseNode.connect(DataSourceNode(2), log_node, 'data', 'base')
+    BaseNode.connect(root_node, log_node, 'result', 'value')
+    BaseNode.connect(log_node, modulus_node, 'result', 'arg1')
+    BaseNode.connect(DataSourceNode(3), modulus_node, 'data', 'arg2')
+    BaseNode.connect(modulus_node, out_node, 'result', 'in')
+
+    print(out_node.resolve_output('out'))
+    print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
+
+
+def math_const_deploy_test():
+    out_node = PassThroughNode()
+    d1_node = DummyNode()
+    print_node = PrintNode()
+    BaseNode.connect(d1_node, out_node, 'out', 'in')
+    BaseNode.connect(PiConstantNode(), d1_node, 'value', 'in')
+    BaseNode.connect(print_node, d1_node, 'out', 'extra')
+    BaseNode.connect(EulerConstantNode(), print_node, 'value', 'in')
+
+    print(out_node.resolve_output('out'))
+    print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
+
+
+def math_round_deploy_test():
+    out_node = PassThroughNode()
+    round_node = RoundNode()
+    BaseNode.connect(round_node, out_node, 'result', 'in')
+    BaseNode.connect(DataSourceNode(5.49), round_node, 'data', 'value')
+
+    print(out_node.resolve_output('out'))
+    print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
+
+
+math_op_deploy_test()

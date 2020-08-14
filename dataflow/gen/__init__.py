@@ -22,12 +22,18 @@ class LanguageValue(LanguageBase):
             return self.value
 
 
-class LanguageNone(LanguageBase):
+class LanguageNone(LanguageValue):
+    def __init__(self):
+        super().__init__(None)
+
     def __es6__(self, c):
         return 'null'
 
 
-class LanguageUndefined(LanguageBase):
+class LanguageUndefined(LanguageValue):
+    def __init__(self):
+        super().__init__(None)
+
     def __es6__(self, c):
         return 'undefined'
 
@@ -61,9 +67,24 @@ class AddSymbol(LanguageBase):
         return '+'
 
 
+class SubtractSymbol(LanguageBase):
+    def __es6__(self, c: 'DeployContext'):
+        return '-'
+
+
 class MultiplySymbol(LanguageBase):
     def __es6__(self, c):
         return '*'
+
+
+class DivideSymbol(LanguageBase):
+    def __es6__(self, c: 'DeployContext'):
+        return '/'
+
+
+class ModuloSymbol(LanguageBase):
+    def __es6__(self, c: 'DeployContext'):
+        return '%'
 
 
 class CompareEqualsSymbol(LanguageBase):
@@ -373,10 +394,10 @@ class DeployContext:
         return self.has_variable(symbol_name) or self.has_function(symbol_name)
 
 
-def deploy(exposed_node, exposed_output):
+def deploy(exposed_node, exposed_output, include_utils=True):
     exposed_node.resolve_deploy(exposed_output)
     return LanguageConcat(
-        UtilsBody(),
+        UtilsBody() if include_utils else LanguageNoop(),
         FunctionDeclaration(
             VariableName('main'),
             LanguageConcat(

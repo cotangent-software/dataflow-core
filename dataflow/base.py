@@ -708,92 +708,6 @@ class NotNode(BaseNode):
         )
 
 
-class AddNode(BaseNode):
-    """
-    Adds two numbers together
-
-    Inputs
-    ------
-    arg1: First (left-hand) operand of the addition operation
-
-    arg2: Second (right-hand) operand of the addition operation
-
-    Outputs
-    -------
-    result: Sum of inputs arg1 and arg2
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.declare_input('arg1')
-        self.declare_input('arg2')
-        self.declare_output('result', self.get_output__result, self.deploy_output__result)
-
-    def get_output__result(self, env):
-        op1 = self.resolve_input('arg1', env)
-        op2 = self.resolve_input('arg2', env)
-        return op1 + op2
-
-    def deploy_output__result(self):
-        conn1 = self.get_input_connection('arg1')
-        conn2 = self.get_input_connection('arg2')
-        return LanguageConcat(
-            conn1.output.resolve_deploy(conn1.output_name),
-            conn2.output.resolve_deploy(conn2.output_name),
-            VariableSetStatement(
-                NodeOutputVariableName(self.id, 'result'),
-                LanguageOperation(AddSymbol(),
-                                  NodeOutputVariableName(conn1.output.id, conn1.output_name),
-                                  NodeOutputVariableName(conn2.output.id, conn2.output_name)
-                                  )
-            )
-        )
-
-
-class MultiplyNode(BaseNode):
-    """
-    Multiplies two numbers together
-
-    Inputs
-    ------
-    arg1: First (left-hand) operand of the multiplication operation
-
-    arg2: Second (right-hand) operand of the multiplication operation
-
-    Outputs
-    -------
-    out: Product of inputs arg1 and arg2
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.declare_input('arg1')
-        self.declare_input('arg2')
-        self.declare_output('result', self.get_output__result, self.deploy_output__result)
-
-    def get_output__result(self, env):
-        op1 = self.resolve_input('arg1', env)
-        op2 = self.resolve_input('arg2', env)
-        return op1 * op2
-
-    def deploy_output__result(self):
-        conn1 = self.get_input_connection('arg1')
-        conn2 = self.get_input_connection('arg2')
-        return LanguageConcat(
-            conn1.output.resolve_deploy(conn1.output_name),
-            conn2.output.resolve_deploy(conn2.output_name),
-            VariableSetStatement(
-                NodeOutputVariableName(self.id, 'result'),
-                LanguageOperation(MultiplySymbol(),
-                                  NodeOutputVariableName(conn1.output.id, conn1.output_name),
-                                  NodeOutputVariableName(conn2.output.id, conn2.output_name)
-                                  )
-            )
-        )
-
-
 class LoopNode(BaseNode):
     """
     Loops a certain number of times based on the state of an input
@@ -1054,6 +968,7 @@ class DummyNode(BaseNode):
     Inputs
     ------
     in: Input value to be passed on to output
+
     extra: Input value which will be resolved but then thrown out
 
     Outputs
@@ -1298,8 +1213,6 @@ BaseNode.NodeRegistry.extend([
     IncrementNode,
     EqualsNode,
     NotNode,
-    AddNode,
-    MultiplyNode,
     LoopNode,
     MapNode,
     ArrayMergeNode,
