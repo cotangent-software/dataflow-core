@@ -1,21 +1,6 @@
 from dataflow.base import BaseNode
 from dataflow.gen import *
 
-op_funcs = {
-    '+': lambda x, y: x + y,
-    '-': lambda x, y: x - y,
-    '*': lambda x, y: x * y,
-    '/': lambda x, y: x / y,
-    '%': lambda x, y: x % y
-}
-op_symbols = {
-    '+': AddSymbol(),
-    '-': SubtractSymbol(),
-    '*': MultiplySymbol(),
-    '/': DivideSymbol(),
-    '%': ModuloSymbol()
-}
-
 
 class OperationNode(BaseNode):
     """
@@ -31,11 +16,11 @@ class OperationNode(BaseNode):
     -------
     result: Resultant of inputs arg1 and arg2 applied to operation
     """
-    def __init__(self, op):
+    def __init__(self, op_func, op_symbol):
         super().__init__()
 
-        self.op_func = op_funcs[op]
-        self.op_symbol = op_symbols[op]
+        self.op_func = op_func
+        self.op_symbol = op_symbol
 
         self.declare_input('arg1')
         self.declare_input('arg2')

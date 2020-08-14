@@ -238,6 +238,45 @@ class BaseNode:
         connection.input.remove_connection(connection)
 
 
+class ExtendedNode(BaseNode):
+    def __init__(self):
+        super().__init__()
+
+        self.extended_inputs = {}
+        self.extended_outputs = {}
+
+    def declare_extended_input(self, name, input_node: BaseNode, input_name: str):
+        super().declare_input(name)
+        source_node = DataSourceNode(None)
+        BaseNode.connect(source_node, input_node, 'data', input_name)
+        self.extended_inputs[name] = [input_node, input_name, source_node]
+
+    def declare_extended_output(self, name, output_node: BaseNode, output_name: str):
+        super().declare_output(name, None)
+        self.extended_outputs[name] = [output_node, output_name]
+
+    def resolve_output(self, name, environment=None):
+        node_entry = self.extended_outputs[name]
+        for input_name in self.extended_inputs:
+            self.extended_inputs[input_name][2].data = self.resolve_input(input_name, environment)
+        return node_entry[0].resolve_output(node_entry[1])
+
+    def resolve_deploy(self, name):
+        node_entry = self.extended_outputs[name]
+        previous_deploys = []
+        for input_name in self.extended_inputs:
+            self.extended_inputs[input_name][2].data = self.get_input_connection_variable_name(input_name)
+            previous_deploys.append(self.resolve_input_deploy(input_name))
+        return LanguageConcat(
+            *previous_deploys,
+            node_entry[0].resolve_deploy(node_entry[1]),
+            VariableSetStatement(
+                NodeOutputVariableName(self.id, name),
+                NodeOutputVariableName(node_entry[0].id, node_entry[1])
+            )
+        )
+
+
 class DataSourceNode(BaseNode):
     """
     Acts as an output-only node which sends a predetermined constant output
@@ -628,82 +667,6 @@ class IncrementNode(BaseNode):
             VariableSetStatement(
                 NodeOutputVariableName(self.id, 'value'),
                 self.deploy_state_value('value')
-            )
-        )
-
-
-class EqualsNode(BaseNode):
-    """
-    Checks whether two inputs are equal or not
-
-    Inputs
-    ------
-    arg1: First operand of the equals statement
-
-    arg2: Second operand of the equals statement
-
-    Outputs
-    -------
-    equal: A boolean being true if arg1 and arg2 are equal and otherwise being false
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.declare_input('arg1')
-        self.declare_input('arg2')
-        self.declare_output('equal', self.get_output__equal, self.deploy_output__equal)
-
-    def get_output__equal(self, env):
-        return self.resolve_input('arg1', env) == self.resolve_input('arg2', env)
-
-    def deploy_output__equal(self):
-        return LanguageConcat(
-            self.resolve_input_deploy('arg1'),
-            self.resolve_input_deploy('arg2'),
-            VariableSetStatement(
-                NodeOutputVariableName(self.id, 'equal'),
-                LanguageOperation(
-                    CompareEqualsSymbol(),
-                    self.get_input_connection_variable_name('arg1'),
-                    self.get_input_connection_variable_name('arg2')
-                )
-            )
-        )
-
-
-class NotNode(BaseNode):
-    """
-    A boolean logic node performing the boolean not operation
-
-    Inputs
-    ------
-    in: Boolean value to be transformed
-
-    Outputs
-    -------
-    out: Boolean value representing the boolean not operation performed on input in
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.declare_input('in')
-        self.declare_output('out', self.get_output__out, self.deploy_output__out)
-
-    def get_output__out(self, env):
-        return not self.resolve_input('in', env)
-
-    def deploy_output__out(self):
-        return LanguageConcat(
-            self.resolve_input_deploy('in'),
-            VariableSetStatement(
-                NodeOutputVariableName(self.id, 'out'),
-                LanguageOperation(
-                    BooleanNotSymbol(),
-                    None,
-                    self.get_input_connection_variable_name('in')
-                )
             )
         )
 
@@ -1211,8 +1174,6 @@ BaseNode.NodeRegistry.extend([
     SwitchNode,
     VariableNode,
     IncrementNode,
-    EqualsNode,
-    NotNode,
     LoopNode,
     MapNode,
     ArrayMergeNode,

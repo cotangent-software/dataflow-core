@@ -15,11 +15,10 @@ from ._PiConstantNode import PiConstantNode
 from ._PowerNode import PowerNode
 from ._RootNode import RootNode
 from ._RoundNode import RoundNode
-from ._OperationNode import OperationNode
 from ._AddNode import AddNode
 from ._SubtractNode import SubtractNode
 
-BaseNode.NodeRegistry.extend([
+exported_nodes = [
     AddNode,
     SubtractNode,
     MultiplyNode,
@@ -37,4 +36,7 @@ BaseNode.NodeRegistry.extend([
     ConstantNode,
     EulerConstantNode,
     PiConstantNode
-])
+]
+
+__all__ = [x.__name__ for x in exported_nodes]
+BaseNode.NodeRegistry.extend(exported_nodes)

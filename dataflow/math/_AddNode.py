@@ -1,4 +1,5 @@
-from dataflow.math import OperationNode
+from dataflow.OperationNode import OperationNode
+from ..gen import AddSymbol
 
 
 class AddNode(OperationNode):
@@ -17,4 +18,4 @@ class AddNode(OperationNode):
     """
 
     def __init__(self):
-        super().__init__('+')
+        super().__init__(lambda x, y: x + y, AddSymbol())

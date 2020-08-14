@@ -190,4 +190,16 @@ def math_round_deploy_test():
     print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
 
 
-math_op_deploy_test()
+def not_equals_test():
+    out_node = PassThroughNode()
+    from dataflow.bool._NotEqualsNode import NotEqualsNode
+    not_equals_node = NotEqualsNode()
+    BaseNode.connect(not_equals_node, out_node, 'result', 'in')
+    BaseNode.connect(DataSourceNode(5.5), not_equals_node, 'data', 'arg1')
+    BaseNode.connect(DataSourceNode(5.49), not_equals_node, 'data', 'arg2')
+
+    print(out_node.resolve_output('out'))
+    print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
+
+
+not_equals_test()

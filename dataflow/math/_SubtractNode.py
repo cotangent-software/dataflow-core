@@ -1,4 +1,5 @@
-from dataflow.math import OperationNode
+from dataflow.OperationNode import OperationNode
+from dataflow.gen import SubtractSymbol
 
 
 class SubtractNode(OperationNode):
@@ -17,4 +18,4 @@ class SubtractNode(OperationNode):
     """
 
     def __init__(self):
-        super().__init__('-')
+        super().__init__(lambda x, y: x - y, SubtractSymbol())

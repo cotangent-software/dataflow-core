@@ -62,6 +62,16 @@ class BooleanNotSymbol(LanguageBase):
         return '!'
 
 
+class BooleanAndSymbol(LanguageBase):
+    def __es6__(self, c: 'DeployContext'):
+        return '&&'
+
+
+class BooleanOrSymbol(LanguageBase):
+    def __es6__(self, c: 'DeployContext'):
+        return '||'
+
+
 class AddSymbol(LanguageBase):
     def __es6__(self, c):
         return '+'
