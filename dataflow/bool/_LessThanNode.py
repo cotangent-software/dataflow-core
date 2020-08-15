@@ -18,4 +18,4 @@ class LessThanNode(OperationNode):
     """
 
     def __init__(self):
-        super().__init__(lambda x, y: x > y, LessThanSymbol())
+        super().__init__(lambda x, y: x < y, LessThanSymbol())
