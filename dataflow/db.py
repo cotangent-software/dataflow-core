@@ -1,5 +1,6 @@
-from dataflow.base import BaseNode, DataSourceNode, GraphError
 import sqlite3
+
+from dataflow.base import BaseNode, GraphError
 
 
 class DatabaseNode(BaseNode):
@@ -10,7 +11,7 @@ class DatabaseNode(BaseNode):
 
         self.declare_output('conn', self.get_output__conn)
 
-    def get_output__conn(self, env):
+    def get_output__conn(self):
         return self.conn
 
 

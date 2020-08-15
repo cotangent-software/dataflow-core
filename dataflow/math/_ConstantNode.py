@@ -21,7 +21,7 @@ class ConstantNode(BaseNode):
 
         self.declare_output('value', self.get_output__value, self.deploy_output__value)
 
-    def get_output__value(self, env):
+    def get_output__value(self):
         return self.value
 
     def deploy_output__value(self):

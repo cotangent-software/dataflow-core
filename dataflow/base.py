@@ -86,7 +86,8 @@ class BaseNode:
         else:
             raise GraphError('Could not find input connection with name \'%s\'' % input_name)
 
-    def get_input_connection_variable_name(self, input_name, allow_unconnected=False) -> Union[VariableName, LanguageNone]:
+    def get_input_connection_variable_name(self, input_name, allow_unconnected=False) \
+            -> Union[VariableName, LanguageNone]:
         conn = self.get_input_connection(input_name, allow_unconnected=allow_unconnected)
         if conn is not None:
             return NodeOutputVariableName(conn.output.id, conn.output_name)
@@ -297,7 +298,7 @@ class DataSourceNode(BaseNode):
 
         self.declare_output('data', self.get_output__data, self.deploy_output__data)
 
-    def get_output__data(self, env):
+    def get_output__data(self):
         return self.data
 
     def deploy_output__data(self):
@@ -354,7 +355,7 @@ class PrintNode(BaseNode):
         self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
-        val = self.resolve_input('in')
+        val = self.resolve_input('in', env)
         print(val)
         return val
 
@@ -585,7 +586,7 @@ class VariableNode(BaseNode):
         next_value = self.resolve_input('value', env)
         if next_value is not None:
             self.state['value'] = next_value
-        return self.get_output__value(env)
+        return self.get_output__value()
 
     def deploy_output__update(self):
         return LanguageConcat(
@@ -598,7 +599,7 @@ class VariableNode(BaseNode):
             )
         )
 
-    def get_output__value(self, env):
+    def get_output__value(self):
         return self.state['value']
 
     def deploy_output__value(self):
@@ -638,7 +639,7 @@ class IncrementNode(BaseNode):
         self.declare_output('increment', self.get_output__increment, self.deploy_output__increment)
         self.declare_output('value', self.get_output__value, self.deploy_output__value)
 
-    def get_output__increment(self, env):
+    def get_output__increment(self):
         self.state['value'] += 1
         return self.state['value']
 
@@ -658,7 +659,7 @@ class IncrementNode(BaseNode):
             self.deploy_state_update('value', increment_var)
         )
 
-    def get_output__value(self, env):
+    def get_output__value(self):
         return self.state['value']
 
     def deploy_output__value(self):
@@ -803,16 +804,18 @@ class MapNode(BaseNode):
             )
         )
 
-    def get_ioutput__entry(self, env):
+    def get_ioutput__entry(self):
         return self.state['current_entry']
 
-    def deploy_ioutput__entry(self):
+    @staticmethod
+    def deploy_ioutput__entry():
         return LanguageNoop()
 
-    def get_ioutput__index(self, env):
+    def get_ioutput__index(self):
         return self.state['current_index']
 
-    def deploy_ioutput__index(self):
+    @staticmethod
+    def deploy_ioutput__index():
         return LanguageNoop()
 
 

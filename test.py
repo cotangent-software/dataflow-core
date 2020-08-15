@@ -1,8 +1,8 @@
 from dataflow.base import *
+from dataflow.bool import NotNode, EqualsNode, NotEqualsNode
 from dataflow.db import SQLiteQueryNode, SQLiteDatabaseNode
 from dataflow.math import AddNode, MultiplyNode, SubtractNode, DivideNode, AbsoluteValueNode, PowerNode, RootNode, \
-    LogNode, PiConstantNode, EulerConstantNode, CeilNode, FloorNode, RoundNode, ModulusNode
-from dataflow.web import WebServerNode, WebEndpointNode
+    LogNode, PiConstantNode, EulerConstantNode, RoundNode, ModulusNode
 
 
 def basic_test():
@@ -88,7 +88,8 @@ def sqlite_test():
 
     query_node = SQLiteQueryNode('INSERT INTO test(name, count, optional) VALUES(?, ?, ?)')
     BaseNode.connect(db_node, query_node, 'conn', 'conn')
-    BaseNode.connect(DataSourceNode(['Random Name', 4, 'This is some extra random text']), query_node, 'data', 'variables')
+    BaseNode.connect(
+        DataSourceNode(['Random Name', 4, 'This is some extra random text']), query_node, 'data', 'variables')
 
     print(query_node.resolve_output('meta'))
 
@@ -192,7 +193,6 @@ def math_round_deploy_test():
 
 def not_equals_test():
     out_node = PassThroughNode()
-    from dataflow.bool._NotEqualsNode import NotEqualsNode
     not_equals_node = NotEqualsNode()
     BaseNode.connect(not_equals_node, out_node, 'result', 'in')
     BaseNode.connect(DataSourceNode(5.5), not_equals_node, 'data', 'arg1')
