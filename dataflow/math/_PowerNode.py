@@ -1,4 +1,6 @@
 from dataflow.base import BaseNode
+from ..gen import *
+from ..gen.math import MathPowerCall
 
 
 class PowerNode(BaseNode):
