@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from dataflow.base import DataSourceNode, BaseNode
-from dataflow.bool import OrNode
+from dataflow.bool import AndNode, OrNode
 
 
 class TestOrNode(TestCase):

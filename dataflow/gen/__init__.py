@@ -180,9 +180,7 @@ class LanguageStatement(LanguageBase):
 
 
 class VariableSet(LanguageBase):
-    def __init__(self, variable_name: VariableName, value: LanguageValue,
-                 function_parameter=False,
-                 dictionary_set=False):
+    def __init__(self, variable_name: VariableName, value: LanguageValue, function_parameter=False, dictionary_set=False):
         self.variable_name = variable_name
         self.value = value
         self.function_parameter = function_parameter
@@ -361,8 +359,7 @@ class UtilsArrayIndexOf(FunctionCall):
 
 
 class UtilsArraySlice(FunctionCall):
-    def __init__(self, array: LanguageValue, slice_start: LanguageValue, slice_end: LanguageValue,
-                 slice_step: LanguageValue):
+    def __init__(self, array: LanguageValue, slice_start: LanguageValue, slice_end: LanguageValue, slice_step: LanguageValue):
         super().__init__(VariableName('utils_array_slice'), array, slice_start, slice_end, slice_step)
 
 

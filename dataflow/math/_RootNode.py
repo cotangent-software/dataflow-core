@@ -1,6 +1,5 @@
 from dataflow.base import BaseNode
 from ..gen import *
-from ..gen.math import MathRootCall
 
 
 class RootNode(BaseNode):
