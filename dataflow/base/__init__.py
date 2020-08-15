@@ -8,12 +8,12 @@ from dataflow.base._PrintNode import PrintNode
 from dataflow.base._ReadEnvironmentNode import ReadEnvironmentNode
 
 exported_others = [
+    BaseNode,
     Connection,
     GraphError,
     EnvironmentContainer
 ]
 exported_nodes = [
-    BaseNode,
     ExtendedNode,
     DataSourceNode,
     PrintNode,

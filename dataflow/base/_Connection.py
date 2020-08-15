@@ -1,10 +1,8 @@
 import uuid
 
-from dataflow.base._BaseNode import BaseNode
-
 
 class Connection:
-    def __init__(self, output_node: BaseNode, input_node: BaseNode, output_name, input_name):
+    def __init__(self, output_node, input_node, output_name, input_name):
         self.id = uuid.uuid4().hex
         self.output = output_node
         self.input = input_node

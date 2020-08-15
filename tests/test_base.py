@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from dataflow.base import DataSourceNode, PassThroughNode, BaseNode
+from dataflow.base import DataSourceNode, BaseNode
+from dataflow.flow import PassThroughNode
 
 
 class TestDataSourceNode(TestCase):
