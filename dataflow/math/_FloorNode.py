@@ -1,8 +1,8 @@
-import math
-
 from dataflow.base import BaseNode
 from dataflow.gen import *
 from dataflow.math._FloorOperation import FloorOperation
+
+import math
 
 
 class FloorNode(BaseNode):

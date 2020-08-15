@@ -3,6 +3,8 @@ from dataflow.gen import *
 from dataflow.math._CeilOperation import CeilOperation
 from dataflow.math._FloorOperation import FloorOperation
 
+import math
+
 
 class RoundNode(BaseNode):
     """
@@ -24,7 +26,10 @@ class RoundNode(BaseNode):
         self.declare_output('result', self.get_output__result, self.deploy_output__result)
 
     def get_output__result(self, env):
-        return round(self.resolve_input('value', env))
+        val = self.resolve_input('value', env)
+        if val % 1 == 0.5:
+            return math.ceil(val)
+        return round(val)
 
     def deploy_output__result(self):
         value_var = self.get_input_connection_variable_name('value')

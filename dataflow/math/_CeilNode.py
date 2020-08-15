@@ -1,8 +1,8 @@
-import math
-
 from dataflow.base import BaseNode
 from dataflow.gen import *
 from dataflow.math._CeilOperation import CeilOperation
+
+import math
 
 
 class CeilNode(BaseNode):

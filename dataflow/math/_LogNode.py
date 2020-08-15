@@ -1,8 +1,8 @@
-import math
-
 from dataflow.base import BaseNode
 from dataflow.gen import *
 from dataflow.gen.math import MathLogCall
+
+import math
 
 
 class LogNode(BaseNode):
