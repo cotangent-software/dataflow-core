@@ -46,19 +46,18 @@ class TestEqualsNode(TestCase):
         d2.data = math.e
         self.assertTrue(equals_node.resolve_output('result'))
 
+    def test_equals_false(self):
+        equals_node, d1, d2 = init_struct(None)
 
-def test_equals_false(self):
-    equals_node, d1, d2 = init_struct(None)
+        d1.data = 'testing1234256'
+        d2.data = 'testing1234567'
 
-    d1.data = 'testing1234256'
-    d2.data = 'testing1234567'
+        self.assertFalse(equals_node.resolve_output('result'))
 
-    self.assertFalse(equals_node.resolve_output('result'))
+        d1.data = math.e
+        d2.data = math.e - 10 ** 0.0001
 
-    d1.data = math.e
-    d2.data = math.e - 10 ** 0.0001
-
-    self.assertFalse(equals_node.resolve_output('result'))
+        self.assertFalse(equals_node.resolve_output('result'))
 
 
 def init_gt_struct(d1_init, d2_init):

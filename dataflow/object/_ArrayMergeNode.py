@@ -1,4 +1,4 @@
-from collections import Iterable
+from collections.abc import Iterable
 
 from dataflow.base import BaseNode
 from dataflow.gen import NodeOutputVariableName, VariableSetStatement, UtilsArrayConcat, LanguageConcat, LanguageValue,\
