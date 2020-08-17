@@ -1,10 +1,28 @@
 from dataflow.base import BaseNode
 from dataflow.gen import LanguageConcat, VariableSetStatement, LanguageNone, NodeOutputVariableName, LanguageOperation, \
     EmptyArraySymbol, LanguageValue, SimpleLoopStatement, UtilsArrayLength, NodePrivateVariableName, ArrayIndex, \
-    UtilsArrayConcat, FunctionCall, IfStatement
+    UtilsArrayConcat, FunctionCall, IfStatement, LanguageNoop
 
 
 class FilterNode(BaseNode):
+    """
+    Filters array elements, only keeping elements when the 'keep' input resolves to true
+
+    Inputs
+    ------
+    array: The array to filter from
+
+    keep (internal): A boolean value determining if the current array element should be kept
+
+    Outputs
+    -------
+    filtered: New array only containing the unfiltered values in 'array'
+
+    entry (internal): Current entry in the filter operation
+
+    index (internal): Current entry's index in the filter operation
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -70,10 +88,10 @@ class FilterNode(BaseNode):
         return self.state['current_entry']
 
     def deploy_ioutput__entry(self):
-        pass
+        return LanguageNoop()
 
     def get_ioutput__index(self, env):
         return self.state['current_index']
 
     def deploy_ioutput__index(self):
-        pass
+        return LanguageNoop()
