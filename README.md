@@ -1,4 +1,5 @@
 # DataFlow
+![Unit tests](https://github.com/ctrekker/dataflow-core/workflows/Unit%20tests/badge.svg)
 ## FAQs
 ### What is it?
 DataFlow is a modular and graph-based approach for implementing backend logic.
