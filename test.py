@@ -5,7 +5,7 @@ from dataflow.flow import PassThroughNode, LoopNode, DummyNode
 from dataflow.gen import LanguageConcat, deploy, FunctionCall, VariableName, DeployContext
 from dataflow.math import AddNode, MultiplyNode, SubtractNode, DivideNode, AbsoluteValueNode, PowerNode, RootNode, \
     LogNode, PiConstantNode, EulerConstantNode, CeilNode, FloorNode, RoundNode, ModulusNode
-from dataflow.object import IndexNode
+from dataflow.object import IndexNode, FilterNode
 from dataflow.state import IncrementNode, VariableNode
 from dataflow.type import ParseIntNode, TypeNode
 from dataflow.web import WebServerNode, WebEndpointNode
@@ -208,4 +208,18 @@ def not_equals_test():
     print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
 
 
-not_equals_test()
+def filter_node_test():
+    filter_node = FilterNode()
+    BaseNode.connect(DataSourceNode([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), filter_node, 'data', 'array')
+    mod_node = ModulusNode()
+    eq_node = EqualsNode()
+    BaseNode.connect(filter_node, mod_node, 'entry', 'arg1')
+    BaseNode.connect(DataSourceNode(2), mod_node, 'data', 'arg2')
+    BaseNode.connect(mod_node, eq_node, 'result', 'arg1')
+    BaseNode.connect(DataSourceNode(0), eq_node, 'data', 'arg2')
+    BaseNode.connect(eq_node, filter_node, 'result', 'keep')
+    print(filter_node.resolve_output('filtered'))
+    print(deploy(filter_node, 'filtered').__es6__(DeployContext()))
+
+
+filter_node_test()

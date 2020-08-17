@@ -1,8 +1,9 @@
 from unittest import TestCase
 
 from dataflow.base import BaseNode, DataSourceNode
-from dataflow.math import AddNode
-from dataflow.object import ArrayMergeNode, DictionaryNode, IndexNode, IndexOfNode, SliceNode, MapNode
+from dataflow.bool import EqualsNode
+from dataflow.math import AddNode, ModulusNode
+from dataflow.object import ArrayMergeNode, DictionaryNode, IndexNode, IndexOfNode, SliceNode, MapNode, FilterNode
 from tests import node_struct
 
 
@@ -26,6 +27,21 @@ class TestDictionaryNode(TestCase):
                              ['a', 'b', 'z', 1, 2, 26],
                              ['key_0', 'key_1', 'key_2', 'value_0', 'value_1', 'value_2'])
                          .resolve_output('object'))
+
+
+class TestFilterNode(TestCase):
+    def test_node_output(self):
+        filter_node = FilterNode()
+        BaseNode.connect(DataSourceNode([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), filter_node, 'data', 'array')
+        mod_node = ModulusNode()
+        eq_node = EqualsNode()
+        BaseNode.connect(filter_node, mod_node, 'entry', 'arg1')
+        BaseNode.connect(DataSourceNode(2), mod_node, 'data', 'arg2')
+        BaseNode.connect(mod_node, eq_node, 'result', 'arg1')
+        BaseNode.connect(DataSourceNode(0), eq_node, 'data', 'arg2')
+        BaseNode.connect(eq_node, filter_node, 'result', 'keep')
+
+        self.assertEqual([0, 2, 4, 6, 8], filter_node.resolve_output('filtered'))
 
 
 class TestIndexNode(TestCase):
