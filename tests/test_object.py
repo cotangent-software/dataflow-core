@@ -3,7 +3,8 @@ from unittest import TestCase
 from dataflow.base import BaseNode, DataSourceNode
 from dataflow.bool import EqualsNode
 from dataflow.math import AddNode, ModulusNode
-from dataflow.object import ArrayMergeNode, DictionaryNode, IndexNode, IndexOfNode, SliceNode, MapNode, FilterNode
+from dataflow.object import ArrayMergeNode, DictionaryNode, IndexNode, IndexOfNode, SliceNode, MapNode, FilterNode, \
+    ReduceNode
 from tests import node_struct
 
 
@@ -42,6 +43,18 @@ class TestFilterNode(TestCase):
         BaseNode.connect(eq_node, filter_node, 'result', 'keep')
 
         self.assertEqual([0, 2, 4, 6, 8], filter_node.resolve_output('filtered'))
+
+
+class TestReduceNode(TestCase):
+    def test_node_output(self):
+        reduce_node = ReduceNode()
+        BaseNode.connect(DataSourceNode([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), reduce_node, 'data', 'array')
+        add_node = AddNode()
+        BaseNode.connect(reduce_node, add_node, 'accumulator', 'arg1')
+        BaseNode.connect(reduce_node, add_node, 'current', 'arg2')
+        BaseNode.connect(add_node, reduce_node, 'result', 'accumulator')
+
+        self.assertEqual(45, reduce_node.resolve_output('reduced'))
 
 
 class TestIndexNode(TestCase):

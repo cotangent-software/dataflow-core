@@ -5,7 +5,7 @@ from dataflow.flow import PassThroughNode, LoopNode, DummyNode
 from dataflow.gen import LanguageConcat, deploy, FunctionCall, VariableName, DeployContext
 from dataflow.math import AddNode, MultiplyNode, SubtractNode, DivideNode, AbsoluteValueNode, PowerNode, RootNode, \
     LogNode, PiConstantNode, EulerConstantNode, CeilNode, FloorNode, RoundNode, ModulusNode
-from dataflow.object import IndexNode, FilterNode
+from dataflow.object import IndexNode, FilterNode, ReduceNode
 from dataflow.state import IncrementNode, VariableNode
 from dataflow.type import ParseIntNode, TypeNode
 from dataflow.web import WebServerNode, WebEndpointNode
@@ -222,4 +222,14 @@ def filter_node_test():
     print(deploy(filter_node, 'filtered').__es6__(DeployContext()))
 
 
-filter_node_test()
+def reduce_node_test():
+    reduce_node = ReduceNode()
+    BaseNode.connect(DataSourceNode([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), reduce_node, 'data', 'array')
+    add_node = AddNode()
+    BaseNode.connect(reduce_node, add_node, 'accumulator', 'arg1')
+    BaseNode.connect(reduce_node, add_node, 'current', 'arg2')
+    BaseNode.connect(add_node, reduce_node, 'result', 'accumulator')
+    print(deploy(reduce_node, 'reduced').__es6__(DeployContext()))
+
+
+reduce_node_test()
