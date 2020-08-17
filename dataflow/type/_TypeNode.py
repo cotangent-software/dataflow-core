@@ -22,7 +22,7 @@ class TypeNode(BaseNode):
         self.declare_output('out', self.get_output__out, self.deploy_output__out)
 
     def get_output__out(self, env):
-        t = self.resolve_input('in', env).__class__.__name__
+        t = self.resolve_input('in', env).__class__
         if t == dict:
             return 'dict'
         if t == list:
