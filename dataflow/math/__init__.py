@@ -1,3 +1,9 @@
+from ._ArccosNode import ArccosNode
+from ._ArcsinNode import ArcsinNode
+from ._ArctanNode import ArctanNode
+from ._CosNode import CosNode
+from ._SinNode import SinNode
+from ._TanNode import TanNode
 from ..base import BaseNode
 
 from ._AbsoluteValueNode import AbsoluteValueNode
@@ -35,7 +41,13 @@ exported_nodes = [
     RoundNode,
     ConstantNode,
     EulerConstantNode,
-    PiConstantNode
+    PiConstantNode,
+    SinNode,
+    CosNode,
+    TanNode,
+    ArcsinNode,
+    ArccosNode,
+    ArctanNode
 ]
 
 __all__ = [x.__name__ for x in exported_nodes]

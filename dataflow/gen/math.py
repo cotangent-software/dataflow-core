@@ -67,3 +67,45 @@ class MathAbsoluteValueCall(LanguageValue):
 
     def __py__(self, c):
         return FunctionCall(VariableName('abs'), self.value).__py__(c)
+
+
+class MathTrigCall(LanguageValue):
+    def __init__(self, func: str, value: LanguageValue):
+        super().__init__(value)
+        self.func = func
+
+    def __es6__(self, c):
+        return FunctionCall(VariableName(f'Math.{self.func}'), self.value).__es6__(c)
+
+    def __py__(self, c):
+        return FunctionCall(VariableName(f'math.{self.func}'), self.value).__py__(c)
+
+
+class MathSinCall(MathTrigCall):
+    def __init__(self, value: LanguageValue):
+        super().__init__('sin', value)
+
+
+class MathCosCall(MathTrigCall):
+    def __init__(self, value: LanguageValue):
+        super().__init__('cos', value)
+
+
+class MathTanCall(MathTrigCall):
+    def __init__(self, value: LanguageValue):
+        super().__init__('tan', value)
+
+
+class MathArcsinCall(MathTrigCall):
+    def __init__(self, value: LanguageValue):
+        super().__init__('asin', value)
+
+
+class MathArccosCall(MathTrigCall):
+    def __init__(self, value: LanguageValue):
+        super().__init__('acos', value)
+
+
+class MathArctanCall(MathTrigCall):
+    def __init__(self, value: LanguageValue):
+        super().__init__('atan', value)

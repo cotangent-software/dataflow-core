@@ -3,7 +3,9 @@ from unittest import TestCase
 
 from dataflow.base import DataSourceNode, BaseNode
 from dataflow.math import AbsoluteValueNode, AddNode, CeilNode, ConstantNode, DivideNode, EulerConstantNode, FloorNode, \
-    LogNode, MaxNode, MinNode, ModulusNode, MultiplyNode, PiConstantNode, PowerNode, RootNode, RoundNode, SubtractNode
+    LogNode, MaxNode, MinNode, ModulusNode, MultiplyNode, PiConstantNode, PowerNode, RootNode, RoundNode, SubtractNode, \
+    SinNode, CosNode, TanNode, ArcsinNode, ArccosNode, ArctanNode
+from tests import node_struct
 
 
 def operation_value(node, val1, val2, val1_name='arg1', val2_name='arg2'):
@@ -163,3 +165,39 @@ class TestSubtractNode(TestCase):
         self.assertEqual(operation_value(SubtractNode(), 5, 0), 5)
         self.assertEqual(operation_value(SubtractNode(), 5, 8), -3)
         self.assertEqual(operation_value(SubtractNode(), 5, -3), 8)
+
+
+class TestSinNode(TestCase):
+    def test_node_output(self):
+        self.assertAlmostEqual(0.5, node_struct(SinNode(), [math.pi / 6.], ['in']).resolve_output('out'))
+        self.assertAlmostEqual(math.sqrt(2) / 2., node_struct(SinNode(), [math.pi / 4.], ['in']).resolve_output('out'))
+
+
+class TestCosNode(TestCase):
+    def test_node_output(self):
+        self.assertAlmostEqual(math.sqrt(3) / 2., node_struct(CosNode(), [math.pi / 6.], ['in']).resolve_output('out'))
+        self.assertAlmostEqual(math.sqrt(2) / 2., node_struct(CosNode(), [math.pi / 4.], ['in']).resolve_output('out'))
+
+
+class TestTanNode(TestCase):
+    def test_node_output(self):
+        self.assertAlmostEqual(0.5 / (math.sqrt(3) / 2.), node_struct(TanNode(), [math.pi / 6.], ['in']).resolve_output('out'))
+        self.assertAlmostEqual(1., node_struct(TanNode(), [math.pi / 4.], ['in']).resolve_output('out'))
+
+
+class TestArcsinNode(TestCase):
+    def test_node_output(self):
+        self.assertAlmostEqual(math.pi / 6., node_struct(ArcsinNode(), [0.5], ['in']).resolve_output('out'))
+        self.assertAlmostEqual(math.pi / 4., node_struct(ArcsinNode(), [math.sqrt(2) / 2.], ['in']).resolve_output('out'))
+
+
+class TestArccosNode(TestCase):
+    def test_node_output(self):
+        self.assertAlmostEqual(math.pi / 6., node_struct(ArccosNode(), [math.sqrt(3) / 2.], ['in']).resolve_output('out'))
+        self.assertAlmostEqual(math.pi / 4., node_struct(ArccosNode(), [math.sqrt(2) / 2.], ['in']).resolve_output('out'))
+
+
+class TestArctanNode(TestCase):
+    def test_node_output(self):
+        self.assertAlmostEqual(math.pi / 6., node_struct(ArctanNode(), [0.5 / (math.sqrt(3) / 2.)], ['in']).resolve_output('out'))
+        self.assertAlmostEqual(math.pi / 4., node_struct(ArctanNode(), [1.], ['in']).resolve_output('out'))
