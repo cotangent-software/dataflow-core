@@ -9,18 +9,16 @@ class MapNode(BaseNode):
     Maps an input array to an output array of equal length with each element transformed based on an internal graph
 
     Inputs
-    ------
-    array: Input array to be transformed
+        array: Input array to be transformed
 
-    value (internal): Result of an elementwise transformation
+        value (internal): Result of an elementwise transformation
 
     Outputs
-    -------
-    mapped: Output array which has been mapped by a transformation
+        mapped: Output array which has been mapped by a transformation
 
-    entry (internal): Element of the input array to be transformed
+        entry (internal): Element of the input array to be transformed
 
-    index (internal): Index of the element to be transformed
+        index (internal): Index of the element to be transformed
     """
 
     def __init__(self):

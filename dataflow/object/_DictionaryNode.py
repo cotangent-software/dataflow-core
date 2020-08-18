@@ -8,14 +8,12 @@ class DictionaryNode(BaseNode):
     Compacts a variable number of inputs into a single outputted key-value dictionary
 
     Inputs
-    ------
-    key_<n>: Key for element number n, starting at 0
+        key_<n>: Key for element number n, starting at 0
 
-    value_<n>: Value for element number n, starting at 0
+        value_<n>: Value for element number n, starting at 0
 
     Outputs
-    -------
-    object: Resulting dictionary object
+        object: Resulting dictionary object
     """
 
     def __init__(self, property_count):

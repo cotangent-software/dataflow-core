@@ -8,18 +8,16 @@ class SwitchNode(BaseNode):
     Depending on an input value, choose which path to return on the basis of the value's equality with a test
 
     Inputs
-    ------
-    value: Value which will be tested for equality
+        value: Value which will be tested for equality
 
-    default: Returned path given that no equality test is satisfied
+        default: Returned path given that no equality test is satisfied
 
-    test_<n>: Value which equality should be tested for
+        test_<n>: Value which equality should be tested for
 
-    return_<n>: Associated return path given that test_<n> is satisfied
+        return_<n>: Associated return path given that test_<n> is satisfied
 
     Outputs
-    -------
-    selected: Outputted value of the selected return path
+        selected: Outputted value of the selected return path
     """
 
     def __init__(self, condition_count):

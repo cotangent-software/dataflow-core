@@ -8,12 +8,10 @@ class IncrementNode(BaseNode):
     Keeps an internal state which will be incremented or read depending on activated output
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    increment: First adds 1 to internal state, then outputs new value
+        increment: First adds 1 to internal state, then outputs new value
 
     value: Reads the internal state without modifying it
     """

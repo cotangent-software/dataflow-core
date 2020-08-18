@@ -10,12 +10,10 @@ class CeilNode(BaseNode):
     Performs the ceiling operation on a number
 
     Inputs
-    ------
-    value: The value for which ceiling should be performed
+        value: The value for which ceiling should be performed
 
     Outputs
-    -------
-    result: Output of the ceiling operation performed on value
+        result: Output of the ceiling operation performed on value
     """
 
     def __init__(self):

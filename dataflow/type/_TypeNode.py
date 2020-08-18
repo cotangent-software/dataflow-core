@@ -7,12 +7,10 @@ class TypeNode(BaseNode):
     Outputs a string containing the type of the input
 
     Inputs
-    ------
-    in: Value to check the type of
+        in: Value to check the type of
 
     Outputs
-    -------
-    out: String value of input type
+        out: String value of input type
     """
 
     def __init__(self):

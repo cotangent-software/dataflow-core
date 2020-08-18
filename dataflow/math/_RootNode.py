@@ -7,14 +7,12 @@ class RootNode(BaseNode):
     Takes the nth root of a number
 
     Inputs
-    ------
-    value: Value to take the nth root of
+        value: Value to take the nth root of
 
-    root: Root to take of value. ex. root 2 would be a square root
+        root: Root to take of value. ex. root 2 would be a square root
 
     Outputs
-    -------
-    result: Nth root of value
+        result: Nth root of value
     """
 
     def __init__(self):

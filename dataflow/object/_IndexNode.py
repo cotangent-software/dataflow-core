@@ -7,14 +7,12 @@ class IndexNode(BaseNode):
     Dynamically accesses the index of input data
 
     Inputs
-    ------
-    data: The data which the index will be applied to
+        data: The data which the index will be applied to
 
-    index: The index to access from the input data
+        index: The index to access from the input data
 
     Outputs
-    -------
-    value: Result of the indexed operation
+        value: Result of the indexed operation
     """
 
     def __init__(self, multiple=False):

@@ -9,18 +9,16 @@ class FilterNode(BaseNode):
     Filters array elements, only keeping elements when the 'keep' input resolves to true
 
     Inputs
-    ------
-    array: The array to filter from
+        array: The array to filter from
 
-    keep (internal): A boolean value determining if the current array element should be kept
+        keep (internal): A boolean value determining if the current array element should be kept
 
     Outputs
-    -------
-    filtered: New array only containing the unfiltered values in 'array'
+        filtered: New array only containing the unfiltered values in 'array'
 
-    entry (internal): Current entry in the filter operation
+        entry (internal): Current entry in the filter operation
 
-    index (internal): Current entry's index in the filter operation
+        index (internal): Current entry's index in the filter operation
     """
 
     def __init__(self):

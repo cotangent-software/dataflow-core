@@ -8,12 +8,10 @@ class PiConstantNode(ConstantNode):
     Outputs pi constant
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    value: An approximated value of pi
+        value: An approximated value of pi
     """
 
     def __init__(self):

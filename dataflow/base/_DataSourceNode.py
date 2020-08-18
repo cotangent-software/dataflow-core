@@ -7,12 +7,10 @@ class DataSourceNode(BaseNode):
     Acts as an output-only node which sends a predetermined constant output
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    data: Predetermined constant output
+        data: Predetermined constant output
     """
 
     def __init__(self, data):

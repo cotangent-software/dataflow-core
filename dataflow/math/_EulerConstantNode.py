@@ -8,12 +8,10 @@ class EulerConstantNode(ConstantNode):
     Outputs euler's constant (e)
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    value: An approximated value of euler's constant
+        value: An approximated value of euler's constant
     """
 
     def __init__(self):

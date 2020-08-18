@@ -16,16 +16,13 @@ def array_find(arr, fun):
 
 
 class BaseNode:
-    """
-    Base class which every node must extend
+    """Base class which every node must extend
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    None
+        None
     """
     NodeRegistry = []
 

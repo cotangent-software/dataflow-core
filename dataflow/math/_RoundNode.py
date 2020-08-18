@@ -11,12 +11,10 @@ class RoundNode(BaseNode):
     Rounds the input value to the nearest whole number
 
     Inputs
-    ------
-    value: The value which should be rounded
+        value: The value which should be rounded
 
     Outputs
-    -------
-    result: Rounded value
+        result: Rounded value
     """
 
     def __init__(self):

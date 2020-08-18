@@ -7,12 +7,10 @@ class ConstantNode(BaseNode):
     Nearly the same as DataSourceNode, but stores only numbers and outputs them from value
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    value: The value associated with the constant
+        value: The value associated with the constant
     """
     def __init__(self, value: Union[int, float]):
         super().__init__()

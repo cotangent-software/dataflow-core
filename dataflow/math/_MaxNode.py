@@ -7,14 +7,12 @@ class MaxNode(BaseNode):
     Takes the maximum between two inputs
 
     Inputs
-    ------
-    arg1: First input to check
+        arg1: First input to check
 
-    arg2: Second input to check
+        arg2: Second input to check
 
     Outputs
-    -------
-    result: Larger of the two input values
+        result: Larger of the two input values
     """
 
     def __init__(self):

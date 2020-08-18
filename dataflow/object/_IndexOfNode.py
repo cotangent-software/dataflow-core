@@ -7,14 +7,12 @@ class IndexOfNode(BaseNode):
     Searches for a value based on equality in a given array
 
     Inputs
-    ------
-    array: The array to search through
+        array: The array to search through
 
-    search: Value to search for in target array
+        search: Value to search for in target array
 
     Outputs
-    -------
-    index: The index of the search element in target array. If not found, it is equal to -1
+        index: The index of the search element in target array. If not found, it is equal to -1
     """
 
     def __init__(self):

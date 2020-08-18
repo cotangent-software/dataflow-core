@@ -8,14 +8,12 @@ class NotEqualsNode(ExtendedNode):
     Checks whether two inputs are not equal
 
     Inputs
-    ------
-    arg1: First operand of the not equals statement
+        arg1: First operand of the not equals statement
 
-    arg2: Second operand of the not equals statement
+        arg2: Second operand of the not equals statement
 
     Outputs
-    -------
-    result: A boolean being true if arg1 and arg2 are not equal and otherwise being false
+        result: A boolean being true if arg1 and arg2 are not equal and otherwise being false
     """
 
     def __init__(self):

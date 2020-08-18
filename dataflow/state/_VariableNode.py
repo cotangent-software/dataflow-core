@@ -7,14 +7,12 @@ class VariableNode(BaseNode):
     Stores a given value so long as the state is preserved
 
     Inputs
-    ------
-    value: New value for the variable if update is triggered
+        value: New value for the variable if update is triggered
 
     Outputs
-    -------
-    value: Nondestructive current value of the variable
+        value: Nondestructive current value of the variable
 
-    update: Triggers a variable update and passes the updated variable through this output
+        update: Triggers a variable update and passes the updated variable through this output
     """
 
     def __init__(self, init_value=0):

@@ -8,18 +8,16 @@ class ReduceNode(BaseNode):
     Reduces all array values into a single value based on an internal accumulator network
 
     Inputs
-    ------
-    array: Array to be reduced
+        array: Array to be reduced
 
-    accumulator (internal): New accumulated value accounting for current array value
+        accumulator (internal): New accumulated value accounting for current array value
 
     Outputs
-    -------
-    reduced: Outputted reduced value of the inputted array
+        reduced: Outputted reduced value of the inputted array
 
-    accumulator (internal): Current accumulated value
+        accumulator (internal): Current accumulated value
 
-    current (internal): Current value to factor into the current accumulated value
+        current (internal): Current value to factor into the current accumulated value
     """
 
     def __init__(self):

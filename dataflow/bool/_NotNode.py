@@ -7,12 +7,10 @@ class NotNode(BaseNode):
     A boolean logic node performing the boolean not operation
 
     Inputs
-    ------
-    in: Boolean value to be transformed
+        in: Boolean value to be transformed
 
     Outputs
-    -------
-    out: Boolean value representing the boolean not operation performed on input in
+        out: Boolean value representing the boolean not operation performed on input in
     """
 
     def __init__(self):

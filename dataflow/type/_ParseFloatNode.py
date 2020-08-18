@@ -7,12 +7,10 @@ class ParseFloatNode(BaseNode):
     Parses an input type to a float
 
     Inputs
-    ------
-    in: Source of the data to be parsed
+        in: Source of the data to be parsed
 
     Outputs
-    -------
-    out: Parsed float output
+        out: Parsed float output
     """
 
     def __init__(self):

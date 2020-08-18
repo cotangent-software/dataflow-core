@@ -10,12 +10,10 @@ class WebServerNode(DataSourceNode):
     Binds a web server to a particular port
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    None
+        None
     """
     def __init__(self, port):
         self.port = port
@@ -37,12 +35,10 @@ class WebEndpointNode(BaseNode):
     Listens for a particular endpoint to be called on a given web server
 
     Inputs
-    ------
-    data: The data which should be sent upon request
+        data: The data which should be sent upon request
 
     Outputs
-    -------
-    content: Value passed through from data input and is sent upon request
+        content: Value passed through from data input and is sent upon request
     """
     def __init__(self, path, server_node: 'WebServerNode', methods='GET', content_type='text/html'):
         super().__init__()
@@ -80,12 +76,10 @@ class JSONStringifyNode(BaseNode):
     Converts a data object into its JSON serialized form
 
     Inputs
-    ------
-    object: The object to be serialized
+        object: The object to be serialized
 
     Outputs
-    -------
-    serialized: A string containing the json encoded object
+        serialized: A string containing the json encoded object
     """
     def __init__(self, indent=None):
         super().__init__()
@@ -104,12 +98,10 @@ class JSONParseNode(BaseNode):
     Converts a JSON serialized string into a data object
 
     Inputs
-    ------
-    serialized: A string containing the json encoded object
+        serialized: A string containing the json encoded object
 
     Outputs
-    -------
-    object: The deserialized object
+        object: The deserialized object
     """
 
     def __init__(self):

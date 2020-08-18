@@ -7,18 +7,16 @@ class SliceNode(BaseNode):
     Slices an array according to python slice rules
 
     Inputs
-    ------
-    array: Array which should be sliced
+        array: Array which should be sliced
 
-    slice_start: Starting index of array slice
+        slice_start: Starting index of array slice
 
-    slice_end: Ending index of array slice
+        slice_end: Ending index of array slice
 
-    slice_step: Step size for slice operation
+        slice_step: Step size for slice operation
 
     Outputs
-    -------
-    array: Sliced version of input array
+        array: Sliced version of input array
     """
 
     def __init__(self):

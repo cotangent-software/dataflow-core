@@ -7,14 +7,12 @@ class MinNode(BaseNode):
     Takes the minimum between two inputs
 
     Inputs
-    ------
-    arg1: First input to check
+        arg1: First input to check
 
-    arg2: Second input to check
+        arg2: Second input to check
 
     Outputs
-    -------
-    result: Smaller of the two input values
+        result: Smaller of the two input values
     """
 
     def __init__(self):

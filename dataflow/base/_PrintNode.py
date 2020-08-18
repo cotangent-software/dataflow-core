@@ -7,12 +7,10 @@ class PrintNode(BaseNode):
     Acts as a PassThroughNode, but prints the value which is passed through
 
     Inputs
-    ------
-    in: Source of the data to be passed
+        in: Source of the data to be passed
 
     Outputs
-    -------
-    out: Place to pass the input data
+        out: Place to pass the input data
     """
 
     def __init__(self):

@@ -7,12 +7,10 @@ class PassThroughNode(BaseNode):
     Passes data with no variation across a single input and output
 
     Inputs
-    ------
-    in: Source of the data to be passed
+        in: Source of the data to be passed
 
     Outputs
-    -------
-    out: Place to pass the input data
+        out: Place to pass the input data
     """
 
     def __init__(self):

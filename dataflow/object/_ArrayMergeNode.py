@@ -10,12 +10,10 @@ class ArrayMergeNode(BaseNode):
     Merges arrays or scalar values into an output array
 
     Inputs
-    ------
-    in_<n>: Arrays or scalars to be merged into the output array
+        in_<n>: Arrays or scalars to be merged into the output array
 
     Outputs
-    -------
-    merged: The result of the array merging operation
+        merged: The result of the array merging operation
     """
 
     def __init__(self, array_count):

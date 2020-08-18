@@ -8,14 +8,12 @@ class LoopNode(BaseNode):
     Loops a certain number of times based on the state of an input
 
     Inputs
-    ------
-    iter: Node will continue to loop as long as this input resolves to be boolean true
+        iter: Node will continue to loop as long as this input resolves to be boolean true
 
-    value: The value which will be passed through once iter becomes false
+        value: The value which will be passed through once iter becomes false
 
     Outputs
-    -------
-    value: Outputted value of the loop, passed through from the value input
+        value: Outputted value of the loop, passed through from the value input
     """
 
     def __init__(self):

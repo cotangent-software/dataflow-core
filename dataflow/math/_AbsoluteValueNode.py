@@ -8,12 +8,10 @@ class AbsoluteValueNode(BaseNode):
     Takes the absolute value of the input connection
 
     Inputs
-    ------
-    in: Number to take the absolute value of
+        in: Number to take the absolute value of
 
     Outputs
-    -------
-    result: Absolute value of input in
+        result: Absolute value of input in
     """
 
     def __init__(self):

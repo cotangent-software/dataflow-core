@@ -7,14 +7,12 @@ class EqualsNode(OperationNode):
     Checks whether two inputs are equal or not
 
     Inputs
-    ------
-    arg1: First operand of the equals statement
+        arg1: First operand of the equals statement
 
-    arg2: Second operand of the equals statement
+        arg2: Second operand of the equals statement
 
     Outputs
-    -------
-    result: A boolean being true if arg1 and arg2 are equal and otherwise being false
+        result: A boolean being true if arg1 and arg2 are equal and otherwise being false
     """
 
     def __init__(self):

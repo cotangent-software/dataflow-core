@@ -7,14 +7,12 @@ class OrNode(OperationNode):
     Performs a boolean or operation on arg1 and arg2
 
     Inputs
-    ------
-    arg1: Left-hand operand for or operation
+        arg1: Left-hand operand for or operation
 
-    arg2: Right-hand operand for or operation
+        arg2: Right-hand operand for or operation
 
     Outputs
-    -------
-    result: Output of the boolean or operation
+        result: Output of the boolean or operation
     """
 
     def __init__(self):

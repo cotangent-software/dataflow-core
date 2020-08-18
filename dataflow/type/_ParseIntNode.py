@@ -7,12 +7,10 @@ class ParseIntNode(BaseNode):
     Parses an input type to an integer
 
     Inputs
-    ------
-    in: Source of the data to be parsed
+        in: Source of the data to be parsed
 
     Outputs
-    -------
-    out: Parsed integer output
+        out: Parsed integer output
     """
 
     def __init__(self):

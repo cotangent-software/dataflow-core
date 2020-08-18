@@ -7,12 +7,10 @@ class ReadEnvironmentNode(IndexNode):
     Returns the environment state as an object
 
     Inputs
-    ------
-    None
+        None
 
     Outputs
-    -------
-    value: The value of the environment state in object form
+        value: The value of the environment state in object form
     """
 
     def __init__(self):

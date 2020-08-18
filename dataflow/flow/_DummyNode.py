@@ -7,14 +7,12 @@ class DummyNode(BaseNode):
     Passes through an input while requiring another input and throwing its value out
 
     Inputs
-    ------
-    in: Input value to be passed on to output
+        in: Input value to be passed on to output
 
-    extra: Input value which will be resolved but then thrown out
+        extra: Input value which will be resolved but then thrown out
 
     Outputs
-    -------
-    out: Resolved value of the in input
+        out: Resolved value of the in input
     """
 
     def __init__(self):

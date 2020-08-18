@@ -9,14 +9,12 @@ class MultiplexNode(BaseNode):
     chooses last input
 
     Inputs
-    ------
-    number: Number from which to choose the input
+        number: Number from which to choose the input
 
-    in_<n>: Value to be resolved given 'number' resolves to be equal to <n>
+        in_<n>: Value to be resolved given 'number' resolves to be equal to <n>
 
     Outputs
-    -------
-    value: The value of the chosen 'in_<n>' input
+        value: The value of the chosen 'in_<n>' input
     """
     def __init__(self, count: int):
         super().__init__()

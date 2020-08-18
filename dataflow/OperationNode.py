@@ -7,14 +7,12 @@ class OperationNode(BaseNode):
     Generic superclass for basic math operations
 
     Inputs
-    ------
-    arg1: First (left-hand) operand of the operation
+        arg1: First (left-hand) operand of the operation
 
     arg2: Second (right-hand) operand of the operation
 
     Outputs
-    -------
-    result: Resultant of inputs arg1 and arg2 applied to operation
+        result: Resultant of inputs arg1 and arg2 applied to operation
     """
     def __init__(self, op_func, op_symbol):
         super().__init__()

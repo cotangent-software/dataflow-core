@@ -7,16 +7,14 @@ class IfNode(BaseNode):
     Resolves one input if a condition is true and another if it is false
 
     Inputs
-    ------
-    condition: A boolean value which will resolve if input if true and else input if false
+        condition: A boolean value which will resolve if input if true and else input if false
 
-    if: Input resolved when the input 'condition' is true
+        if: Input resolved when the input 'condition' is true
 
-    else: Input resolved when the input 'condition' is false
+        else: Input resolved when the input 'condition' is false
 
     Outputs
-    -------
-    value: The value of either 'if' or 'else', depending on the value of 'condition'
+        value: The value of either 'if' or 'else', depending on the value of 'condition'
     """
 
     def __init__(self):

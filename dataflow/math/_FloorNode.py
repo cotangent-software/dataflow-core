@@ -10,12 +10,10 @@ class FloorNode(BaseNode):
     Performs the floor operation on a number
 
     Inputs
-    ------
-    value: The value for which floor should be performed
+        value: The value for which floor should be performed
 
     Outputs
-    -------
-    result: Output of the floor operation performed on value
+        result: Output of the floor operation performed on value
     """
 
     def __init__(self):

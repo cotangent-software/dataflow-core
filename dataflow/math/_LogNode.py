@@ -10,14 +10,12 @@ class LogNode(BaseNode):
     Takes the log of a value given a base
 
     Inputs
-    ------
-    value: Value to take the logarithm of
+        value: Value to take the logarithm of
 
-    base: Base of the logarithm
+        base: Base of the logarithm
 
     Outputs
-    -------
-    result: The value of log base of value
+        result: The value of log base of value
     """
 
     def __init__(self):

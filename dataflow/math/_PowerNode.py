@@ -8,14 +8,12 @@ class PowerNode(BaseNode):
     Raises one number to the power of another
 
     Inputs
-    ------
-    base: Base of the power operation
+        base: Base of the power operation
 
-    power: Power to raise the base to
+        power: Power to raise the base to
 
     Outputs
-    -------
-    result: Power operation from base raised to power
+        result: Power operation from base raised to power
     """
 
     def __init__(self):
