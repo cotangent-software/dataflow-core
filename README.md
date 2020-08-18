@@ -12,8 +12,27 @@ for in-code dynamic graph construction or creation of custom base nodes included
 the form of plugins. In a nutshell, its everything needed to make DataFlow work.
 
 ### What is DataFlow's current state?
-As of now, DataFlow is very much in its infancy, and many of the core aspects are 
-still being fleshed out.
+The DataFlow base library is essentially in a v1.0 state, so it is unlikely to change 
+in the near future. However, many aspects of the standard library surrounding the base
+are in motion, meaning usage of these nodes may be unpredictable. Below is a more 
+detailed status list of each of the node packages.
+```
+base - Stable
+bool - Stable
+flow - Nearly stable
+math - Stable
+object - Volatile
+state - Volatile
+type - Volatile
+db - Extremely volatile
+web - Extremely volatile
+```
+Stable means it is unlikely any nodes will break compatibility by v1.0. Volatile means that major changes to 
+nodes are likely to occur by v1.0. Extremely volatile means nearly every node will have
+major changes which will break compatibility.
+
+The code generation package `gen` does not contain any nodes, but is used by nearly all nodes, and as such is in
+a nearly stable state.
 
 ## Installation
 `pip install dataflow-core-ctrekker`
