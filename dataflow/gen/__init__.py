@@ -6,6 +6,9 @@ class LanguageBase:
     def __es6__(self, c: 'DeployContext'):
         pass
 
+    def __py__(self, c: 'DeployContext'):
+        pass
+
 
 class LanguageValue(LanguageBase):
     def __init__(self, value):
@@ -21,6 +24,15 @@ class LanguageValue(LanguageBase):
         else:
             return self.value
 
+    def __py__(self, c):
+        t = type(self.value)
+        if t == str:
+            return '"' + self.value + '"'
+        if issubclass(t, LanguageBase):
+            return self.value.__py__(c)
+        else:
+            return self.value
+
 
 class LanguageNone(LanguageValue):
     def __init__(self):
@@ -28,6 +40,9 @@ class LanguageNone(LanguageValue):
 
     def __es6__(self, c):
         return 'null'
+
+    def __py__(self, c):
+        return 'None'
 
 
 class LanguageUndefined(LanguageValue):
@@ -37,10 +52,16 @@ class LanguageUndefined(LanguageValue):
     def __es6__(self, c):
         return 'undefined'
 
+    def __py__(self, c):
+        return 'None'
+
 
 class LanguageNoop(LanguageBase):
     def __es6__(self, c):
         return ''
+
+    def __py__(self, c):
+        return c.scope_depth() * '    ' + 'pass'
 
 
 class LanguageOperation(LanguageValue):
@@ -54,26 +75,44 @@ class LanguageOperation(LanguageValue):
         blank = ''
         left_val = self.left.__es6__(c) if self.left is not None else blank
         right_val = self.right.__es6__(c) if self.right is not None else blank
-        return f'({left_val}{self.op.__es6__(c)}{right_val}) '
+        return f'({left_val}{self.op.__es6__(c)}{right_val})'
+
+    def __py__(self, c):
+        blank = ''
+        left_val = self.left.__py__(c) if self.left is not None else blank
+        right_val = self.right.__py__(c) if self.right is not None else blank
+        return f'({left_val} {self.op.__py__(c)} {right_val})'
 
 
 class BooleanNotSymbol(LanguageBase):
     def __es6__(self, c):
         return '!'
 
+    def __py__(self, c: 'DeployContext'):
+        return 'not'
+
 
 class BooleanAndSymbol(LanguageBase):
     def __es6__(self, c: 'DeployContext'):
         return '&&'
+
+    def __py__(self, c: 'DeployContext'):
+        return 'and'
 
 
 class BooleanOrSymbol(LanguageBase):
     def __es6__(self, c: 'DeployContext'):
         return '||'
 
+    def __py__(self, c: 'DeployContext'):
+        return 'or'
+
 
 class AddSymbol(LanguageBase):
     def __es6__(self, c):
+        return '+'
+
+    def __py__(self, c: 'DeployContext'):
         return '+'
 
 
@@ -81,9 +120,15 @@ class SubtractSymbol(LanguageBase):
     def __es6__(self, c: 'DeployContext'):
         return '-'
 
+    def __py__(self, c: 'DeployContext'):
+        return '-'
+
 
 class MultiplySymbol(LanguageBase):
     def __es6__(self, c):
+        return '*'
+
+    def __py__(self, c: 'DeployContext'):
         return '*'
 
 
@@ -91,9 +136,15 @@ class DivideSymbol(LanguageBase):
     def __es6__(self, c: 'DeployContext'):
         return '/'
 
+    def __py__(self, c: 'DeployContext'):
+        return '/'
+
 
 class ModuloSymbol(LanguageBase):
     def __es6__(self, c: 'DeployContext'):
+        return '%'
+
+    def __py__(self, c: 'DeployContext'):
         return '%'
 
 
@@ -101,9 +152,15 @@ class CompareEqualsSymbol(LanguageBase):
     def __es6__(self, c):
         return '==='
 
+    def __py__(self, c: 'DeployContext'):
+        return '=='
+
 
 class LessThanSymbol(LanguageBase):
     def __es6__(self, c):
+        return '<'
+
+    def __py__(self, c: 'DeployContext'):
         return '<'
 
 
@@ -111,9 +168,15 @@ class GreaterThanSymbol(LanguageBase):
     def __es6__(self, c):
         return '>'
 
+    def __py__(self, c: 'DeployContext'):
+        return '>'
+
 
 class LessThanOrEqualSymbol(LanguageBase):
     def __es6__(self, c):
+        return '<='
+
+    def __py__(self, c: 'DeployContext'):
         return '<='
 
 
@@ -121,14 +184,23 @@ class GreaterThanOrEqualSymbol(LanguageBase):
     def __es6__(self, c):
         return '>='
 
+    def __py__(self, c: 'DeployContext'):
+        return '>='
+
 
 class EmptyArraySymbol(LanguageBase):
     def __es6__(self, c):
         return '[]'
 
+    def __py__(self, c: 'DeployContext'):
+        return '[]'
+
 
 class EmptyDictSymbol(LanguageBase):
     def __es6__(self, c):
+        return '{}'
+
+    def __py__(self, c: 'DeployContext'):
         return '{}'
 
 
@@ -137,6 +209,9 @@ class VariableName(LanguageValue):
         super().__init__(name)
 
     def __es6__(self, c):
+        return self.value
+
+    def __py__(self, c):
         return self.value
 
     def __eq__(self, other):
@@ -154,6 +229,9 @@ class ArrayIndex(VariableName):
 
     def __es6__(self, c):
         return f'{self.array.__es6__(c)}[{self.index.__es6__(c)}]'
+
+    def __py__(self, c):
+        return f'{self.array.__py__(c)}[{self.index.__py__(c)}]'
 
 
 class NodeOutputVariableName(VariableName):
@@ -178,6 +256,9 @@ class LanguageStatement(LanguageBase):
     def __es6__(self, c):
         return f'{self.value.__es6__(c)};'
 
+    def __py__(self, c: 'DeployContext'):
+        return self.value.__py__(c)
+
 
 class VariableSet(LanguageBase):
     def __init__(self, variable_name: VariableName, value: LanguageValue, function_parameter=False, dictionary_set=False):
@@ -193,6 +274,12 @@ class VariableSet(LanguageBase):
             c.add_variable(self.variable_name)
         return f'{declare}{self.variable_name.__es6__(c)} = {self.value.__es6__(c)}'
 
+    def __py__(self, c: 'DeployContext'):
+        has_variable = c.has_symbol(self.variable_name)
+        if not has_variable:
+            c.add_variable(self.variable_name)
+        return f'{self.variable_name.__py__(c)} = {self.value.__py__(c)}'
+
 
 class VariableSetStatement(VariableSet):
     def __init__(self, variable_name: VariableName, value: LanguageValue, dictionary_set=False):
@@ -200,6 +287,9 @@ class VariableSetStatement(VariableSet):
 
     def __es6__(self, c):
         return f'{super().__es6__(c)};'
+
+    def __py__(self, c: 'DeployContext'):
+        return f'{(c.scope_depth() * "    ")}{super().__py__(c)}'
 
 
 class ReturnStatement(LanguageBase):
@@ -209,6 +299,9 @@ class ReturnStatement(LanguageBase):
     def __es6__(self, c):
         return f'return {self.value.__es6__(c)};'
 
+    def __py__(self, c: 'DeployContext'):
+        return f'{(c.scope_depth() * "    ")}return {self.value.__py__(c)}'
+
 
 class PrintStatement(LanguageBase):
     def __init__(self, value: LanguageValue):
@@ -216,6 +309,9 @@ class PrintStatement(LanguageBase):
 
     def __es6__(self, c):
         return f'console.log({self.value.__es6__(c)});'
+
+    def __py__(self, c: 'DeployContext'):
+        return f'{(c.scope_depth() * "    ")}print({self.value.__py__(c)})'
 
 
 class FunctionDeclaration(LanguageBase):
@@ -235,6 +331,18 @@ class FunctionDeclaration(LanguageBase):
         else:
             return LanguageNoop().__es6__(c)
 
+    def __py__(self, c: 'DeployContext'):
+        if not c.has_function(self.name):
+            c.add_function(self.name)
+            indent = (c.scope_depth() * "    ")
+            c.push_scope()
+            params_str = ', '.join([x.__py__(c) for x in self.params])
+            out = f'{indent}def {self.name.__py__(c)}({params_str}):\n{self.body.__py__(c)}'
+            c.pop_scope()
+            return out
+        else:
+            return LanguageNoop().__py__(c)
+
 
 class FunctionCall(LanguageValue):
     def __init__(self, name: VariableName, *params):
@@ -246,6 +354,10 @@ class FunctionCall(LanguageValue):
         params_str = ', '.join([x.__es6__(c) for x in self.params])
         return f'{self.name.__es6__(c)}({params_str})'
 
+    def __py__(self, c):
+        params_str = ', '.join([x.__py__(c) for x in self.params])
+        return f'{self.name.__py__(c)}({params_str})'
+
 
 class ParseIntCall(LanguageValue):
     def __init__(self, value: LanguageValue):
@@ -254,6 +366,9 @@ class ParseIntCall(LanguageValue):
     def __es6__(self, c):
         return f'parseInt({self.value.__es6__(c)})'
 
+    def __py__(self, c):
+        return f'int({self.value.__py__(c)})'
+
 
 class ParseFloatCall(LanguageValue):
     def __init__(self, value: LanguageValue):
@@ -261,6 +376,9 @@ class ParseFloatCall(LanguageValue):
 
     def __es6__(self, c):
         return f'parseFloat({self.value.__es6__(c)})'
+
+    def __py__(self, c):
+        return f'float({self.value.__py__(c)})'
 
 
 class IfStatement(LanguageBase):
@@ -280,6 +398,21 @@ class IfStatement(LanguageBase):
             condition_part = f'({self.condition.__es6__(c)})'
         c.push_scope()
         out = f'{if_value}{condition_part} {{\n{self.body.__es6__(c)}\n}}'
+        c.pop_scope()
+        return out
+
+    def __py__(self, c: 'DeployContext'):
+        if_value = 'if'
+        if self.if_type == 'elseif':
+            if_value = 'elif'
+        elif self.if_type == 'else':
+            if_value = 'else'
+        condition_part = ''
+        if self.if_type != 'else':
+            condition_part = f' {self.condition.__py__(c)}'
+        indent = (c.scope_depth() * "    ")
+        c.push_scope()
+        out = f'{indent}{if_value}{condition_part}:\n{self.body.__py__(c)}'
         c.pop_scope()
         return out
 
@@ -303,6 +436,13 @@ class SimpleLoopStatement(LanguageBase):
         c.pop_scope()
         return out
 
+    def __py__(self, c: 'DeployContext'):
+        indent = (c.scope_depth() * "    ")
+        c.push_scope()
+        out = f'{indent}for {self.variable_name.__py__(c)} in range({self.start.__py__(c)}, {self.end.__py__(c)}):\n{self.body.__py__(c)}'
+        c.pop_scope()
+        return out
+
 
 class ConditionalLoopStatement(LanguageBase):
     def __init__(self, condition: LanguageValue, body: LanguageBase):
@@ -315,13 +455,23 @@ class ConditionalLoopStatement(LanguageBase):
         c.pop_scope()
         return out
 
+    def __py__(self, c: 'DeployContext'):
+        indent = (c.scope_depth() * "    ")
+        c.push_scope()
+        out = f'{indent}while {self.condition.__py__(c)}:\n{self.body.__py__(c)}'
+        c.pop_scope()
+        return out
 
-class LanguageConcat:
+
+class LanguageConcat(LanguageBase):
     def __init__(self, *statements):
         self.statements = statements
 
     def __es6__(self, c):
         return '\n'.join([x.__es6__(c) for x in self.statements if x is not None])
+
+    def __py__(self, c):
+        return '\n'.join([x.__py__(c) for x in self.statements if x is not None])
 
 
 class UtilsBody(LanguageValue):
@@ -330,6 +480,10 @@ class UtilsBody(LanguageValue):
 
     def __es6__(self, c):
         with open('utils/es6.js', 'r') as fh:
+            return fh.read()
+
+    def __py__(self, c):
+        with open('utils/py.py', 'r') as fh:
             return fh.read()
 
 
@@ -363,6 +517,11 @@ class UtilsArraySlice(FunctionCall):
         super().__init__(VariableName('utils_array_slice'), array, slice_start, slice_end, slice_step)
 
 
+class UtilsObjectHasKey(FunctionCall):
+    def __init__(self, object_val: LanguageValue, key: LanguageValue):
+        super().__init__(VariableName('utils_object_has_key'), object_val, key)
+
+
 class DeployContext:
     def __init__(self):
         self.variables = [[]]
@@ -375,6 +534,9 @@ class DeployContext:
     def pop_scope(self):
         self.variables.pop()
         self.functions.pop()
+
+    def scope_depth(self):
+        return len(self.variables) - 1
 
     def add_variable(self, variable_name):
         self.variables[-1].append(variable_name)

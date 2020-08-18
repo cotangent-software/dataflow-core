@@ -118,9 +118,9 @@ def deploy_test():
     BaseNode.connect(loop_node, out_node, 'value', 'in')
     BaseNode.connect(split_node, loop_node, 'out', 'iter')
     BaseNode.connect(not_node, split_node, 'out', 'in')
-    BaseNode.connect(eq_node, not_node, 'equal', 'in')
+    BaseNode.connect(eq_node, not_node, 'result', 'in')
     BaseNode.connect(iter_node, eq_node, 'increment', 'arg1')
-    BaseNode.connect(DataSourceNode(50000), eq_node, 'data', 'arg2')
+    BaseNode.connect(DataSourceNode(50), eq_node, 'data', 'arg2')
     BaseNode.connect(var_node, loop_node, 'value', 'value')
 
     BaseNode.connect(var_node, split_node, 'update', 'extra')
@@ -132,10 +132,10 @@ def deploy_test():
         deploy(out_node, 'out'),
         FunctionCall(VariableName('main'))
     )
-    print(code.__es6__(DeployContext()))
-    with open('deploy.min.js', 'w') as fh:
-        fh.write(code.__es6__(DeployContext()))
-    print(out_node.resolve_output('out'))
+    print(code.__py__(DeployContext()))
+    # with open('deploy.min.js', 'w') as fh:
+    #     fh.write(code.__es6__(DeployContext()))
+    # print(out_node.resolve_output('out'))
 
 
 def math_op_deploy_test():
@@ -170,7 +170,7 @@ def math_op_deploy_test():
     BaseNode.connect(modulus_node, out_node, 'result', 'in')
 
     print(out_node.resolve_output('out'))
-    print(deploy(out_node, 'out', include_utils=False).__es6__(DeployContext()))
+    print(deploy(out_node, 'out', include_utils=False).__py__(DeployContext()))
 
 
 def math_const_deploy_test():
@@ -219,7 +219,7 @@ def filter_node_test():
     BaseNode.connect(DataSourceNode(0), eq_node, 'data', 'arg2')
     BaseNode.connect(eq_node, filter_node, 'result', 'keep')
     print(filter_node.resolve_output('filtered'))
-    print(deploy(filter_node, 'filtered').__es6__(DeployContext()))
+    print(deploy(filter_node, 'filtered').__py__(DeployContext()))
 
 
 def reduce_node_test():
@@ -229,7 +229,7 @@ def reduce_node_test():
     BaseNode.connect(reduce_node, add_node, 'accumulator', 'arg1')
     BaseNode.connect(reduce_node, add_node, 'current', 'arg2')
     BaseNode.connect(add_node, reduce_node, 'result', 'accumulator')
-    print(deploy(reduce_node, 'reduced').__es6__(DeployContext()))
+    print(deploy(reduce_node, 'reduced').__py__(DeployContext()))
 
 
-reduce_node_test()
+deploy_test()

@@ -10,6 +10,9 @@ class MathPowerCall(LanguageValue):
     def __es6__(self, c):
         return FunctionCall(VariableName('Math.pow'), self.base, self.power).__es6__(c)
 
+    def __py__(self, c):
+        return FunctionCall(VariableName('math.pow'), self.base, self.power).__py__(c)
+
 
 class MathRootCall(LanguageValue):
     def __init__(self, value: LanguageValue, root: LanguageValue):
@@ -23,6 +26,13 @@ class MathRootCall(LanguageValue):
             self.value,
             LanguageOperation(DivideSymbol(), LanguageValue(1), self.root)
         ).__es6__(c)
+
+    def __py__(self, c):
+        return FunctionCall(
+            VariableName('math.pow'),
+            self.value,
+            LanguageOperation(DivideSymbol(), LanguageValue(1), self.root)
+        ).__py__(c)
 
 
 class MathLogCall(LanguageValue):
@@ -44,6 +54,9 @@ class MathLogCall(LanguageValue):
             )
         ).__es6__(c)
 
+    def __py__(self, c):
+        return FunctionCall(VariableName('math.log'), self.value, self.base).__py__(c)
+
 
 class MathAbsoluteValueCall(LanguageValue):
     def __init__(self, value: LanguageValue):
@@ -51,3 +64,6 @@ class MathAbsoluteValueCall(LanguageValue):
 
     def __es6__(self, c):
         return FunctionCall(VariableName('Math.abs'), self.value).__es6__(c)
+
+    def __py__(self, c):
+        return FunctionCall(VariableName('abs'), self.value).__py__(c)

@@ -30,3 +30,6 @@ function utils_array_slice(array, slice_start, slice_stop, slice_step) {
     }
     return stepped;
 }
+function utils_object_has_key(object_val, key) {
+    return object_val[key] !== undefined;
+}

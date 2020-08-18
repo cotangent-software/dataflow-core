@@ -5,7 +5,7 @@ from ._Connection import Connection
 from ._GraphError import GraphError
 from ..gen import NodeOutputVariableName, LanguageNone, NodeOutputFunctionName, FunctionDeclaration, LanguageConcat, \
     ReturnStatement, LanguageNoop, VariableName, ArrayIndex, LanguageValue, NodePrivateVariableName, IfStatement, \
-    LanguageOperation, CompareEqualsSymbol, LanguageUndefined, VariableSetStatement
+    LanguageOperation, CompareEqualsSymbol, LanguageUndefined, VariableSetStatement, BooleanNotSymbol, UtilsObjectHasKey
 
 
 def array_find(arr, fun):
@@ -113,16 +113,20 @@ class BaseNode:
             return LanguageNoop()
 
     def deploy_state_init(self, name, default):
+        state_idx = LanguageValue(NodePrivateVariableName(self.id, name).value)
         state_var = ArrayIndex(
                         VariableName('state'),
-                        LanguageValue(NodePrivateVariableName(self.id, name).value)
+                        state_idx
                     )
         return LanguageConcat(
             IfStatement(
                 LanguageOperation(
-                    CompareEqualsSymbol(),
-                    state_var,
-                    LanguageUndefined()
+                    BooleanNotSymbol(),
+                    None,
+                    UtilsObjectHasKey(
+                        VariableName('state'),
+                        state_idx
+                    )
                 ),
                 VariableSetStatement(state_var, default, dictionary_set=True),
                 if_type='if'
