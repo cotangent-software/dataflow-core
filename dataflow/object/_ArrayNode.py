@@ -5,7 +5,7 @@ from dataflow.gen import NodeOutputVariableName, VariableSetStatement, UtilsArra
     EmptyArraySymbol
 
 
-class ArrayMergeNode(BaseNode):
+class ArrayNode(BaseNode):
     """
     Merges arrays or scalar values into an output array
 

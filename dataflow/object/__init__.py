@@ -1,6 +1,7 @@
-from ._ArrayMergeNode import ArrayMergeNode
+from ._ArrayNode import ArrayNode
 from ._DictionaryNode import DictionaryNode
 from ._FilterNode import FilterNode
+from ._FindNode import FindNode
 from ._IndexNode import IndexNode
 from ._IndexOfNode import IndexOfNode
 from ._MapNode import MapNode
@@ -10,10 +11,11 @@ from ..base import BaseNode
 
 exported_nodes = [
     MapNode,
-    ArrayMergeNode,
+    ArrayNode,
     DictionaryNode,
     IndexNode,
     IndexOfNode,
+    FindNode,
     SliceNode,
     FilterNode,
     ReduceNode

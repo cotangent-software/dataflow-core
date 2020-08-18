@@ -3,18 +3,18 @@ from unittest import TestCase
 from dataflow.base import BaseNode, DataSourceNode
 from dataflow.bool import EqualsNode
 from dataflow.math import AddNode, ModulusNode
-from dataflow.object import ArrayMergeNode, DictionaryNode, IndexNode, IndexOfNode, SliceNode, MapNode, FilterNode, \
-    ReduceNode
+from dataflow.object import ArrayNode, DictionaryNode, IndexNode, IndexOfNode, SliceNode, MapNode, FilterNode, \
+    ReduceNode, FindNode
 from tests import node_struct
 
 
-class TestArrayMergeNode(TestCase):
+class TestArrayNode(TestCase):
     def test_node_output(self):
-        self.assertEqual([1, 2, 3], node_struct(ArrayMergeNode(3), [1, 2, 3], ['in_0', 'in_1', 'in_2'])
+        self.assertEqual([1, 2, 3], node_struct(ArrayNode(3), [1, 2, 3], ['in_0', 'in_1', 'in_2'])
                          .resolve_output('merged'))
-        self.assertEqual([1, 2, 3, 5, 8], node_struct(ArrayMergeNode(3), [[1, 2, 3], 5, 8], ['in_0', 'in_1', 'in_2'])
+        self.assertEqual([1, 2, 3, 5, 8], node_struct(ArrayNode(3), [[1, 2, 3], 5, 8], ['in_0', 'in_1', 'in_2'])
                          .resolve_output('merged'))
-        self.assertEqual([1, 2, 3, 4], node_struct(ArrayMergeNode(2), [[1, 2], [3, 4]], ['in_0', 'in_1'])
+        self.assertEqual([1, 2, 3, 4], node_struct(ArrayNode(2), [[1, 2], [3, 4]], ['in_0', 'in_1'])
                          .resolve_output('merged'))
 
 
@@ -75,6 +75,20 @@ class TestIndexOfNode(TestCase):
                          .resolve_output('index'))
         self.assertEqual(2, node_struct(IndexOfNode(), [['first', 'second', 'third'], 'third'], ['array', 'search'])
                          .resolve_output('index'))
+
+
+class TestFindNode(TestCase):
+    def test_node_output(self):
+        find_node = FindNode()
+        add_node = AddNode()
+        eq_node = EqualsNode()
+        BaseNode.connect(DataSourceNode([0, 1, 2, 3, 4, 5, 6]), find_node, 'data', 'array')
+        BaseNode.connect(find_node, add_node, 'entry', 'arg1')
+        BaseNode.connect(DataSourceNode(3), add_node, 'data', 'arg2')
+        BaseNode.connect(add_node, eq_node, 'result', 'arg1')
+        BaseNode.connect(DataSourceNode(7), eq_node, 'data', 'arg2')
+        BaseNode.connect(eq_node, find_node, 'result', 'matches')
+        self.assertEqual(4, find_node.resolve_output('match'))
 
 
 class TestMapNode(TestCase):
