@@ -45,7 +45,7 @@ class FindNode(BaseNode):
         match_var = NodeOutputVariableName(self.id, 'match')
         i_var = NodePrivateVariableName(self.id, 'i')
         return LanguageConcat(
-            self.resolve_input('array'),
+            self.resolve_input_deploy('array'),
             VariableSetStatement(
                 entry_var,
                 LanguageNone()

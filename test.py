@@ -232,4 +232,4 @@ def reduce_node_test():
     print(deploy(reduce_node, 'reduced').__py__(DeployContext()))
 
 
-deploy_test()
+filter_node_test()
