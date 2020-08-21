@@ -1,6 +1,6 @@
 from dataflow.base import *
 from dataflow.bool import NotNode, EqualsNode
-from dataflow.db import SQLiteQueryNode, SQLiteDatabaseNode
+from dataflow.db import SQLiteDatabaseAdapter, DatabaseConnectionNode, DatabaseObjectNode, DatabaseObjectFieldNode
 from dataflow.flow import PassThroughNode, LoopNode, DummyNode
 from dataflow.gen import LanguageConcat, deploy, FunctionCall, VariableName, DeployContext
 from dataflow.math import AddNode, MultiplyNode, SubtractNode, DivideNode, AbsoluteValueNode, PowerNode, RootNode, \
@@ -72,38 +72,6 @@ def loops_test():
 
     print(output_node.resolve_output('out'))
     print(result_node.state)
-
-
-def sqlite_test():
-    create_test_table = """
-    CREATE TABLE IF NOT EXISTS test (
-        id integer PRIMARY KEY,
-        name text NOT NULL,
-        count integer NOT NULL,
-        optional text
-    );
-    """
-
-    print('SQLite test:')
-    db_node = SQLiteDatabaseNode(':memory:')
-    query_node = SQLiteQueryNode(create_test_table)
-    BaseNode.connect(db_node, query_node, 'conn', 'conn')
-    BaseNode.connect(DataSourceNode([]), query_node, 'data', 'variables')
-
-    print(query_node.resolve_output('meta'))
-
-    query_node = SQLiteQueryNode('INSERT INTO test(name, count, optional) VALUES(?, ?, ?)')
-    BaseNode.connect(db_node, query_node, 'conn', 'conn')
-    BaseNode.connect(DataSourceNode(['Random Name', 4, 'This is some extra random text']), query_node, 'data', 'variables')
-
-    print(query_node.resolve_output('meta'))
-
-    query_node = SQLiteQueryNode('SELECT * FROM test')
-    BaseNode.connect(db_node, query_node, 'conn', 'conn')
-    BaseNode.connect(DataSourceNode([]), query_node, 'data', 'variables')
-
-    print(query_node.resolve_output('data'))
-    print(query_node.resolve_output('meta'))
 
 
 def deploy_test():
@@ -232,4 +200,25 @@ def reduce_node_test():
     print(deploy(reduce_node, 'reduced').__py__(DeployContext()))
 
 
-filter_node_test()
+def database_test():
+    adapter = SQLiteDatabaseAdapter('test.db')
+    conn_node = DatabaseConnectionNode(adapter)
+    obj_node = DatabaseObjectNode(2)
+    name_field = DatabaseObjectFieldNode()
+    age_field = DatabaseObjectFieldNode()
+    BaseNode.connect(DataSourceNode('person'), obj_node, 'data', 'name')
+
+    BaseNode.connect(DataSourceNode('name'), name_field, 'data', 'name')
+    BaseNode.connect(DataSourceNode('string'), name_field, 'data', 'type')
+    BaseNode.connect(DataSourceNode(True), name_field, 'data', 'required')
+    BaseNode.connect(DataSourceNode('age'), age_field, 'data', 'name')
+    BaseNode.connect(DataSourceNode('int'), age_field, 'data', 'type')
+
+    BaseNode.connect(name_field, obj_node, 'field', 'field_0')
+    BaseNode.connect(age_field, obj_node, 'field', 'field_1')
+
+    object_schema = obj_node.resolve_output('db_object')
+    adapter.define_object(object_schema)
+
+
+database_test()

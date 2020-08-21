@@ -68,7 +68,7 @@ class BaseNode:
         conn = self.get_input_connection(input_name)
         return NodeOutputFunctionName(conn.output.id, conn.output_name)
 
-    def resolve_input(self, name, environment=None, allow_unconnected=False):
+    def resolve_input(self, name, environment=None, allow_unconnected=False, default=None):
         if environment is None:
             environment = {}
         conn = array_find(self.connections, lambda x: x.input_name == name and x.input == self)
@@ -76,7 +76,7 @@ class BaseNode:
             return conn.output.resolve_output(conn.output_name, environment)
         else:
             if allow_unconnected:
-                return None
+                return default
             else:
                 raise GraphError('Unconnected input \'%s\' is depended upon' % name)
 
