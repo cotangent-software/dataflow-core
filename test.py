@@ -1,6 +1,7 @@
 from dataflow.base import *
 from dataflow.bool import NotNode, EqualsNode
-from dataflow.db import SQLiteDatabaseAdapter, DatabaseConnectionNode, DatabaseObjectNode, DatabaseObjectFieldNode
+from dataflow.db import SQLiteDatabaseAdapter, DatabaseConnectionNode, DatabaseObjectNode, DatabaseObjectFieldNode, \
+    DatabaseQuery, DatabaseCondition, DatabaseQueryNode, DatabaseConditionNode
 from dataflow.flow import PassThroughNode, LoopNode, DummyNode
 from dataflow.gen import LanguageConcat, deploy, FunctionCall, VariableName, DeployContext
 from dataflow.math import AddNode, MultiplyNode, SubtractNode, DivideNode, AbsoluteValueNode, PowerNode, RootNode, \
@@ -219,6 +220,21 @@ def database_test():
 
     object_schema = obj_node.resolve_output('db_object')
     adapter.define_object(object_schema)
+
+    print(adapter.query(DatabaseQuery(
+        object_schema,
+        [
+            DatabaseCondition(age_field.resolve_output('field'), 13, '>')
+        ]
+    )))
+    query_node = DatabaseQueryNode(1)
+    BaseNode.connect(obj_node, query_node, 'db_object', 'object')
+    BaseNode.connect(DatabaseConnectionNode(adapter), query_node, 'data', 'db')
+    cond_node = DatabaseConditionNode('<')
+    BaseNode.connect(age_field, cond_node, 'field', 'field')
+    BaseNode.connect(DataSourceNode(20.), cond_node, 'data', 'compare')
+    BaseNode.connect(cond_node, query_node, 'condition', 'condition_0')
+    print(query_node.resolve_output('rows'))
 
 
 database_test()

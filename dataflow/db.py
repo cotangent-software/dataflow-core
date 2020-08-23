@@ -7,6 +7,35 @@ class DatabaseError(Exception):
     pass
 
 
+class ObjectField:
+    def __init__(self, name, field_type, required=False, unique=False):
+        self.name = name
+        self.field_type = field_type
+        self.required = required
+        self.unique = unique
+
+    def __str__(self):
+        return self.name
+
+
+class ObjectSchema:
+    def __init__(self, name, fields):
+        self.name = name
+        self.fields = fields
+
+
+class DatabaseQuery:
+    def __init__(self, schema, conditions):
+        self.schema = schema
+        self.conditions = conditions
+
+
+class DatabaseCondition:
+    def __init__(self, left, right, op):
+        self.left = left
+        self.right = right
+        self.op = op
+
 
 class DatabaseObjectNode(BaseNode):
     """
@@ -37,10 +66,10 @@ class DatabaseObjectNode(BaseNode):
             next_field = self.resolve_input(f'field_{n}', env, allow_unconnected=True)
             if next_field:
                 fields.append(next_field)
-        return {
-            'name': self.resolve_input('name', env),
-            'fields': fields
-        }
+        return ObjectSchema(
+            self.resolve_input('name', env),
+            fields
+        )
 
 
 class DatabaseObjectFieldNode(BaseNode):
@@ -54,6 +83,8 @@ class DatabaseObjectFieldNode(BaseNode):
 
         required: Boolean value, true if this field should be required upon creation
 
+        unique: Boolean value, true if this field cannot contain duplicate values
+
     Outputs
         field: Database object field to be connected to the 'field_<n>' input of a database object
     """
@@ -63,14 +94,61 @@ class DatabaseObjectFieldNode(BaseNode):
         self.declare_input('name')
         self.declare_input('type')
         self.declare_input('required')
+        self.declare_input('unique')
         self.declare_output('field', self.get_output__field)
 
     def get_output__field(self, env):
-        return {
-            'name': self.resolve_input('name', env),
-            'type': self.resolve_input('type', env, allow_unconnected=True, default='object'),
-            'required': self.resolve_input('required', env, allow_unconnected=True, default=False)
-        }
+        return ObjectField(
+            self.resolve_input('name', env),
+            self.resolve_input('type', env, allow_unconnected=True, default='object'),
+            self.resolve_input('required', env, allow_unconnected=True, default=False),
+            self.resolve_input('unique', env, allow_unconnected=True, default=False)
+        )
+
+
+class DatabaseQueryNode(BaseNode):
+    def __init__(self, condition_count):
+        super().__init__()
+
+        self.condition_count = condition_count
+
+        for n in range(self.condition_count):
+            self.declare_input(f'condition_{n}')
+        self.declare_input('object')
+        self.declare_input('db')
+
+        self.declare_output('rows', self.get_output__rows)
+
+    def get_output__rows(self, env):
+        conditions = []
+        for n in range(self.condition_count):
+            conditions.append(self.resolve_input(f'condition_{n}', env))
+        db = self.resolve_input('db', env)
+        db_object = self.resolve_input('object', env)
+        db.define_object(db_object)
+        return db.query(DatabaseQuery(
+            db_object,
+            conditions
+        ))
+
+
+class DatabaseConditionNode(BaseNode):
+    def __init__(self, op='='):
+        super().__init__()
+
+        self.op = op
+
+        self.declare_input('field')
+        self.declare_input('compare')
+
+        self.declare_output('condition', self.get_output__condition)
+
+    def get_output__condition(self, env):
+        return DatabaseCondition(
+            self.resolve_input('field', env),
+            self.resolve_input('compare', env),
+            self.op
+        )
 
 
 class DatabaseConnectionNode(DataSourceNode):
@@ -88,14 +166,14 @@ class DatabaseAdapter:
     def disconnect(self):
         pass
 
-    def define_object(self, schema):
+    def define_object(self, schema: ObjectSchema):
         if self.conn is None:
             self.connect()
 
     def query(self, query_object):
         pass
 
-    def insert(self, object_entry):
+    def insert(self, schema: ObjectSchema, object_entry):
         pass
 
     def update(self, query_object, object_entry):
@@ -116,24 +194,43 @@ class SQLiteDatabaseAdapter(DatabaseAdapter):
     def disconnect(self):
         self.conn = None
 
-    def define_object(self, schema):
+    def define_object(self, schema: ObjectSchema):
         super().define_object(schema)
-        fields_str = ',\n'.join([f'{field["name"]} {self._to_sqlite_type(field["type"])}{" NOT NULL" if field["required"] else ""}' for field in schema['fields']])
+        fields_str = ',\n'.join([f'{field.name} {self._to_sqlite_type(field.field_type)}{" NOT NULL" if field.required else ""}' for field in schema.fields])
         create_sql = f"""
-        CREATE TABLE IF NOT EXISTS {schema['name']} (
+        CREATE TABLE IF NOT EXISTS {schema.name} (
             id INTEGER PRIMARY KEY,
 {fields_str}
         );
         """
-        print(create_sql)
         c = self.conn.cursor()
         c.execute(create_sql)
 
-    def query(self, query_object):
-        pass
+    def query(self, query_object: DatabaseQuery):
+        c = self.conn.cursor()
+        where_clause = ''
+        if len(query_object.conditions) > 0:
+            where_clause = ' WHERE ' + ' AND '.join([str(x.left) + x.op + str(x.right) for x in query_object.conditions])
+        query_sql = f'SELECT * FROM {query_object.schema.name}{where_clause}'
+        c.execute(query_sql)
 
-    def insert(self, object_entry):
-        pass
+        out = []
+        rows = c.fetchall()
+        for i in range(len(rows)):
+            d = {}
+            for j in range(len(c.description)):
+                d[c.description[j][0]] = rows[i][j]
+            out.append(d)
+        return out
+
+    def insert(self, schema: ObjectSchema, object_entry: dict):
+        c = self.conn.cursor()
+        insert_sql = f'INSERT INTO {schema.name}' \
+                     f' ({",".join(object_entry.keys())}) VALUES ({",".join([self._to_sqlite_val(x) for x in object_entry.values()])}) '
+        print(insert_sql)
+        c.execute(insert_sql)
+        self.conn.commit()
+        c.close()
 
     def update(self, query_object, object_entry):
         pass
@@ -150,3 +247,10 @@ class SQLiteDatabaseAdapter(DatabaseAdapter):
             'array': 'TEXT',
             'dict': 'TEXT'
         }[field_type]
+
+    @staticmethod
+    def _to_sqlite_val(field_value):
+        t = type(field_value)
+        if t == str:
+            return "'" + field_value.replace("'", "\'") + "'"
+        return str(field_value)
