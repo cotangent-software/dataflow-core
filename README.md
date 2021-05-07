@@ -49,7 +49,7 @@ code.
 A dataflow graph is made up of nodes, which provide functionality, and connections, 
 which bind together nodes. To start, let's create a DataSourceNode. This type of
 node simply returns a predefined value when asked to.
-```
+```python
 from dataflow.base import DataSourceNode
 
 data_node = DataSourceNode('Hello, world!')
@@ -64,7 +64,7 @@ the value of an output. The names of outputs differ across node types, and in
 DataSourceNode's case, its only output's name is 'data'.
 
 Now lets try a slightly more complex example: adding two numbers together
-```
+```python
 from dataflow.base import BaseNode, DataSourceNode
 from dataflow.math import AddNode
 
@@ -91,7 +91,7 @@ When you deploy a graph, dataflow will convert an output resolution call into a 
 in a given output target language. For example, if you wanted to deploy the addition graph
 from the previous section, you call a different method, `resolve_deploy` on a node.
 
-```
+```python
 from dataflow.gen import DeployContext
 print(add_node.resolve_deploy('result').__es6__(DeployContext()))
 ```
@@ -100,7 +100,7 @@ This looks highly similar to resolving an output, except after calling `resolve_
 This function will convert a tree containing deployment instructions into raw language code. In this case,
 `__es6__` converts your code into JavaScript/ECMAScript 6. The output from the above code segment is as
 follows:
-```
+```javascript
 let v__32a16972700e43959f62da5cc9e0e5ee_data = 5;
 let v__ecdf17f053424a509d1617ecf69ede9f_data = 4;
 let v__5315800f215a4baba6c95ff9b69a5f54_result = (v__32a16972700e43959f62da5cc9e0e5ee_data+v__ecdf17f053424a509d1617ecf69ede9f_data) ;
@@ -115,7 +115,7 @@ function `deploy` exists in the `gen` module.
 print(deploy(add_node, 'result').__es6__(DeployContext())
 ```
 This will now output:
-```
+```javascript
 function utils_type(obj) {
     const t = typeof obj;
     if(t === 'object' && !Array.isArray(obj)) return 'dict';
